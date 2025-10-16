@@ -173,18 +173,16 @@ export function WeekView() {
   // Handle loading and error states
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-synthwave-bg-dark">
-        <div className="text-synthwave-neon-teal text-xl font-mono">
-          Loading events...
-        </div>
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-teal-500 text-xl font-mono">Loading events...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-synthwave-bg-dark">
-        <div className="text-synthwave-neon-pink text-xl font-mono">
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-xl font-mono">
           Error loading events: {(error as Error).message}
         </div>
       </div>
@@ -198,8 +196,7 @@ export function WeekView() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleToday}
-            className="px-4 py-2 font-semibold rounded-lg text-amber-300 hover:text-amber-200 
-            hover:shadow-neon-teal transition-all"
+            className="px-4 py-2 font-semibold rounded-lg text-amber-300 hover:text-amber-200 transition-all"
           >
             Today
           </button>
@@ -277,7 +274,7 @@ export function WeekView() {
         >
           <div className="relative" style={{ minHeight: "1440px" }}>
             {/* Time grid background */}
-            <TimeGrid daysCount={7} />
+            <TimeGrid />
 
             {/* Day columns */}
             <div
@@ -288,7 +285,7 @@ export function WeekView() {
               }}
             >
               {/* Empty corner for time labels */}
-              <div className="border-r-2 border-synthwave-grid-heavy" />
+              <div className="border-r-1 border-purple-700" />
 
               {/* Day columns with events */}
               {weekDays.map((day) => {
@@ -302,7 +299,10 @@ export function WeekView() {
                     onDoubleClick={handleDayDoubleClick}
                   >
                     {dayEvents.map((event) => (
-                      <EventCard key={event.id} event={event} />
+                      <EventCard
+                        key={event.id}
+                        event={event as Event & { startTime: Date }}
+                      />
                     ))}
                   </DayColumn>
                 );
@@ -312,7 +312,9 @@ export function WeekView() {
 
           {/* Drag overlay */}
           <DragOverlay>
-            {activeEvent ? <EventCard event={activeEvent} /> : null}
+            {activeEvent ? (
+              <EventCard event={activeEvent as Event & { startTime: Date }} />
+            ) : null}
           </DragOverlay>
         </DndContext>
       </div>
@@ -322,7 +324,7 @@ export function WeekView() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateEvent}
-        initialStartTime={newEventStartTime}
+        {...(newEventStartTime && { initialStartTime: newEventStartTime })}
       />
     </div>
   );

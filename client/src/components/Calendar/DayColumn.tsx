@@ -60,7 +60,7 @@ export function DayColumn({ date, children, onDoubleClick }: DayColumnProps) {
         ref={setNodeRef}
         className={`
           relative flex-1 transition-colors z-0
-          ${isOver ? "bg-synthwave-neon-purple/10" : "bg-transparent"}
+          ${isOver ? "bg-purple-500/10" : "bg-transparent"}
         `}
         style={{ minHeight: "1440px" }} // 24 hours * 60px
         onDoubleClick={handleDoubleClick}

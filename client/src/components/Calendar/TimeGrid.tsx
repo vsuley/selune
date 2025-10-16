@@ -1,10 +1,6 @@
 import { formatHourLabel, getHoursInDay } from "../../utils/dateHelpers";
 
-interface TimeGridProps {
-  daysCount: number;
-}
-
-export function TimeGrid({ daysCount }: TimeGridProps) {
+export function TimeGrid() {
   const hours = getHoursInDay();
 
   return (

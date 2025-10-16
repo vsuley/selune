@@ -140,7 +140,7 @@ export function EventFormModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border-1 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-amber-300 resize-none"
+              className="w-full px-3 py-2 border-1 rounded-lg focus:outline-none focus:border-amber-300 resize-none"
               placeholder="Additional notes..."
             />
           </div>

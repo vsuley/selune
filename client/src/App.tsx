@@ -1,5 +1,5 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WeekView } from './components/Calendar/WeekView';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WeekView } from "./components/Calendar/WeekView";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -14,7 +14,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-synthwave-bg-dark">
+      <div className="min-h-screen bg-violet-950">
         <WeekView />
       </div>
     </QueryClientProvider>
