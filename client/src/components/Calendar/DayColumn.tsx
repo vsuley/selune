@@ -20,7 +20,7 @@ export function DayColumn({ date, children }: DayColumnProps) {
   const today = isToday(date);
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full flex flex-col border-r-2" style={{ borderRightColor: 'rgba(131, 56, 236, 0.5)' }}>
       {/* Day header */}
       <div
         className={`
@@ -43,7 +43,7 @@ export function DayColumn({ date, children }: DayColumnProps) {
       <div
         ref={setNodeRef}
         className={`
-          relative flex-1 transition-colors
+          relative flex-1 transition-colors z-0
           ${isOver ? 'bg-synthwave-neon-purple/10' : 'bg-transparent'}
         `}
         style={{ minHeight: '1440px' }} // 24 hours * 60px

@@ -8,9 +8,9 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
   const hours = getHoursInDay();
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div className="absolute inset-0 pointer-events-none z-0">
       {/* Time labels column */}
-      <div className="absolute left-0 top-0 w-16 h-full">
+      <div className="absolute left-0 top-0 w-16 h-full z-10">
         {hours.map((hour) => (
           <div
             key={hour}
@@ -23,57 +23,48 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
       </div>
 
       {/* Grid lines */}
-      <div className="absolute left-16 right-0 top-0 bottom-0">
-        {/* Vertical lines (day separators) */}
-        <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${daysCount}, 1fr)` }}>
-          {Array.from({ length: daysCount }).map((_, idx) => (
-            <div
-              key={`day-${idx}`}
-              className="border-r border-synthwave-grid-heavy"
-              style={{
-                borderRightWidth: idx === daysCount - 1 ? '0' : '2px',
-              }}
-            />
-          ))}
-        </div>
-
+      <div className="absolute left-16 right-0 top-0 bottom-0 z-10">
         {/* Horizontal lines (time markers) */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-10">
           {hours.map((hour) => (
             <div key={`hour-${hour}`}>
               {/* Hour line (solid) */}
               <div
-                className="absolute left-0 right-0 border-t border-synthwave-grid-medium"
+                className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60}px`,
-                  borderTopWidth: '1px',
+                  borderTop: '2px solid rgba(131, 56, 236, 0.5)',
+                  height: '0px',
                 }}
               />
 
               {/* 15-minute markers (dotted, very light) */}
               <div
-                className="absolute left-0 right-0 border-t border-dotted border-synthwave-grid-light opacity-30"
+                className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 15}px`,
-                  borderTopWidth: '1px',
+                  borderTop: '1px dotted rgba(131, 56, 236, 0.3)',
+                  height: '0px',
                 }}
               />
 
               {/* 30-minute marker (dashed) */}
               <div
-                className="absolute left-0 right-0 border-t border-dashed border-synthwave-grid-light"
+                className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 30}px`,
-                  borderTopWidth: '1px',
+                  borderTop: '1px dashed rgba(131, 56, 236, 0.3)',
+                  height: '0px',
                 }}
               />
 
               {/* 45-minute markers (dotted, very light) */}
               <div
-                className="absolute left-0 right-0 border-t border-dotted border-synthwave-grid-light opacity-30"
+                className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 45}px`,
-                  borderTopWidth: '1px',
+                  borderTop: '1px dotted rgba(131, 56, 236, 0.3)',
+                  height: '0px',
                 }}
               />
             </div>

@@ -247,7 +247,7 @@ export function WeekView() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="relative">
+          <div className="relative" style={{ minHeight: '1440px' }}>
             {/* Time grid background */}
             <TimeGrid daysCount={7} />
 
