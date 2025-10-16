@@ -42,6 +42,7 @@ export function WeekView() {
     Date | undefined
   >();
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
+  const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
 
   const weekDays = useMemo(
     () => getWeekDays(selectedDate, weekStartsOn),
@@ -110,19 +111,28 @@ export function WeekView() {
       | undefined;
     if (draggedEvent) {
       setActiveEvent(draggedEvent);
+      setDraggingEventId(draggedEvent.id);
     }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveEvent(null);
 
-    if (!over) return;
+    if (!over) {
+      // Drag was cancelled, reset immediately
+      setActiveEvent(null);
+      setDraggingEventId(null);
+      return;
+    }
 
     const draggedEvent = active.data.current?.["event"] as Event | undefined;
     const overData = over.data.current;
 
-    if (!draggedEvent || !overData || !draggedEvent.startTime) return;
+    if (!draggedEvent || !overData || !draggedEvent.startTime) {
+      setActiveEvent(null);
+      setDraggingEventId(null);
+      return;
+    }
 
     // Calculate new time based on drop position
     const targetDate = overData["date"] as Date | undefined;
@@ -155,13 +165,28 @@ export function WeekView() {
     // Snap to 15-minute increments
     newStartTime = snapToQuarterHour(newStartTime);
 
-    // Update the event on the server
-    updateEventMutation.mutate({
-      id: draggedEvent.id,
-      data: {
-        startTime: newStartTime.toISOString(),
+    // DON'T clear activeEvent yet - keep the overlay visible during transition
+    // The mutation's optimistic update will happen synchronously
+    updateEventMutation.mutate(
+      {
+        id: draggedEvent.id,
+        data: {
+          startTime: newStartTime.toISOString(),
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          // Clear drag state after successful update
+          setActiveEvent(null);
+          setTimeout(() => setDraggingEventId(null), 100);
+        },
+        onError: () => {
+          // Clear immediately on error
+          setActiveEvent(null);
+          setDraggingEventId(null);
+        },
+      }
+    );
   };
 
   // Group events by day (only scheduled events with startTime)
@@ -320,6 +345,7 @@ export function WeekView() {
                         key={event.id}
                         event={event as Event & { startTime: Date }}
                         onDoubleClick={handleEventDoubleClick}
+                        isBeingDragged={draggingEventId === event.id}
                       />
                     ))}
                   </DayColumn>
@@ -328,10 +354,33 @@ export function WeekView() {
             </div>
           </div>
 
-          {/* Drag overlay */}
-          <DragOverlay>
+          {/* Drag overlay - simplified preview that follows cursor */}
+          <DragOverlay
+            dropAnimation={{
+              duration: 0,
+              easing: 'ease',
+            }}
+          >
             {activeEvent ? (
-              <EventCard event={activeEvent as Event & { startTime: Date }} />
+              <div
+                className={`
+                  rounded-lg border-2 p-2 overflow-hidden
+                  bg-purple-900 border-sky-400
+                  bg-opacity-20 backdrop-blur-sm
+                  opacity-90
+                  cursor-grabbing
+                  shadow-lg
+                `}
+                style={{
+                  width: "180px",
+                  height: `${activeEvent.durationMinutes}px`,
+                  minHeight: "40px",
+                }}
+              >
+                <div className="text-white text-sm truncate">
+                  {activeEvent.title}
+                </div>
+              </div>
             ) : null}
           </DragOverlay>
         </DndContext>

@@ -19,6 +19,7 @@ interface Event {
 interface EventCardProps {
   event: Event;
   onDoubleClick?: (event: Event) => void;
+  isBeingDragged?: boolean;
 }
 
 // Category color mapping
@@ -41,7 +42,7 @@ const categoryColors = {
   },
 };
 
-export function EventCard({ event, onDoubleClick }: EventCardProps) {
+export function EventCard({ event, onDoubleClick, isBeingDragged = false }: EventCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: event.id,
@@ -58,8 +59,9 @@ export function EventCard({ event, onDoubleClick }: EventCardProps) {
     }
   };
 
+  // Never apply transform to positioned elements - causes jumpiness
+  // The DragOverlay handles the drag preview separately
   const style = {
-    transform: CSS.Translate.toString(transform),
     position: "absolute" as const,
     top: `${getTimePosition(event.startTime)}px`,
     height: `${getDurationHeight(event.durationMinutes)}px`,
@@ -73,18 +75,29 @@ export function EventCard({ event, onDoubleClick }: EventCardProps) {
   const isChild = !!event.parentEventId;
   const isPast = isPastEvent(event.startTime, event.durationMinutes);
 
+  // Hide the original element when dragging (DragOverlay shows the preview)
+  // Also keep it hidden briefly after drop while optimistic update completes
+  if (isDragging || isBeingDragged) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="opacity-0"
+        {...listeners}
+        {...attributes}
+      />
+    );
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`
         rounded-lg border-2 p-2 cursor-move overflow-hidden
-        transition-all duration-150
         ${colors.bg} ${colors.border}
         ${
-          isDragging
-            ? "opacity-50 scale-105 z-50"
-            : isPast
+          isPast
             ? "opacity-50 hover:opacity-50 z-10"
             : "opacity-90 hover:opacity-100 z-10"
         }
