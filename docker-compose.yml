@@ -1,0 +1,133 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: selune-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-selune}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-selune_password}
+      POSTGRES_DB: ${POSTGRES_DB:-selune_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-selune} -d ${POSTGRES_DB:-selune_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - selune-network
+
+  # pgAdmin - Database Management UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: selune-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@selune.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - selune-network
+
+  # Backend API Server (Development)
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: development
+    container_name: selune-server
+    ports:
+      - "3001:3001"
+    volumes:
+      # Mount server source for hot reload
+      - ./server/src:/app/server/src
+      - ./server/package.json:/app/server/package.json
+      # Mount Prisma schema (read-only for hot reload schema changes)
+      - ./server/prisma:/app/server/prisma:ro
+      # Preserve container's node_modules (named volume)
+      - server_node_modules:/app/server/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-selune}:${POSTGRES_PASSWORD:-selune_password}@postgres:5432/${POSTGRES_DB:-selune_db}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - selune-network
+    command: npm run dev
+
+  # Frontend Client (Development)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: selune-client
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount client source for hot reload
+      - ./client/src:/app/client/src
+      - ./client/public:/app/client/public
+      - ./client/index.html:/app/client/index.html
+      - ./client/vite.config.ts:/app/client/vite.config.ts
+      - ./client/tsconfig.json:/app/client/tsconfig.json
+      - ./client/tsconfig.app.json:/app/client/tsconfig.app.json
+      - ./client/tailwind.config.js:/app/client/tailwind.config.js
+      - ./client/postcss.config.js:/app/client/postcss.config.js
+      - /app/client/node_modules  # Prevent overwriting node_modules
+    environment:
+      VITE_API_URL: http://localhost:3001
+    restart: unless-stopped
+    depends_on:
+      - server
+    networks:
+      - selune-network
+
+  # Prisma Studio - Database GUI
+  prisma-studio:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: development
+    container_name: selune-prisma-studio
+    working_dir: /app/server
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./server/prisma:/app/server/prisma:ro
+      - server_node_modules:/app/server/node_modules
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-selune}:${POSTGRES_PASSWORD:-selune_password}@postgres:5432/${POSTGRES_DB:-selune_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - selune-network
+    command: npx prisma studio --hostname 0.0.0.0
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  server_node_modules:
+    driver: local
+
+networks:
+  selune-network:
+    driver: bridge

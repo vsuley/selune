@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example model - you can modify or remove this
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Recurring pattern definitions
+// Represents templates for recurring obligations (e.g., "Clean cat filter weekly")
+model RecurrencePattern {
+  id    String @id @default(uuid())
+  title String
+
+  // Pattern type: weekly, monthly, yearly, every_n_days, n_per_period, nth_weekday_of_month
+  frequency String
+
+  // Numeric value for frequency (e.g., 3 for "every 3 days" or "3x per week")
+  frequencyValue Int
+
+  // Default duration in minutes
+  durationMinutes Int
+
+  // Time preferences: {preferred: "evening", acceptable: ["morning", "evening"]}
+  timePreferences Json
+
+  // Day preferences: {preferred: ["weekend"], acceptable: "any"}
+  dayPreferences Json
+
+  // For nth_weekday_of_month: {weekday: 5, occurrence: 1} = "First Friday"
+  // weekday: 0-6 (0=Sunday), occurrence: 1-4 or -1 (last)
+  nthWeekdayConfig Json?
+
+  // For yearly recurrence: {month: 10, day: 15} = "October 15"
+  yearlyConfig Json?
+
+  // For yearly on nth weekday: {month: 11, weekday: 4, occurrence: 4} = "4th Thu of Nov (Thanksgiving)"
+  yearlyNthWeekday Json?
+
+  // Whether this pattern is active (can be deactivated instead of deleted)
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Generated event instances
+  events Event[]
+
+  @@index([active])
+}
+
+// Individual events (scheduled or unscheduled)
+// Can be standalone, from a pattern, or child of another event
+model Event {
+  id    String @id @default(uuid())
+  title String
+
+  // null = unscheduled (in backlog)
+  startTime DateTime?
+
+  // Duration in minutes
+  durationMinutes Int
+
+  // Parent event reference (for sub-events)
+  parentEventId String?
+  parentEvent   Event?  @relation("ParentChild", fields: [parentEventId], references: [id], onDelete: Cascade)
+  childEvents   Event[] @relation("ParentChild")
+
+  // Recurring pattern reference (if this event is from a pattern)
+  patternId String?
+  pattern   RecurrencePattern? @relation(fields: [patternId], references: [id], onDelete: SetNull)
+
+  // Period tracking key for recurring events
+  // Format: "2025-W42" for weekly, "2025-10" for monthly, "2025" for yearly
+  // Used to determine if a pattern has been satisfied for a given period
+  periodKey String?
+
+  // Category/tag for grouping and coloring
+  category String @default("general")
+
+  // Whether this is a time-bound backlog item (has a deadline)
+  isTimeBound Boolean @default(false)
+
+  // Deadline for time-bound items
+  deadline DateTime?
+
+  // Additional notes
+  notes String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for common queries
+  @@index([startTime])
+  @@index([patternId, periodKey])
+  @@index([parentEventId])
+  @@index([isTimeBound, deadline])
+  @@index([startTime, patternId]) // Composite for "get scheduled instances of pattern"
+}

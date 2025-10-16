@@ -1,0 +1,34 @@
+{
+  "name": "selune",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:client": "docker-compose logs -f client",
+    "docker:logs:server": "docker-compose logs -f server",
+    "docker:restart": "docker-compose restart",
+    "docker:restart:client": "docker-compose restart client",
+    "docker:restart:server": "docker-compose restart server",
+    "docker:clean": "docker-compose down -v && docker system prune -f",
+    "docker:prod:build": "docker-compose -f docker-compose.prod.yml build",
+    "docker:prod:up": "docker-compose -f docker-compose.prod.yml up -d",
+    "docker:prod:down": "docker-compose -f docker-compose.prod.yml down",
+    "docker:prod:logs": "docker-compose -f docker-compose.prod.yml logs -f",
+    "prisma:migrate": "docker-compose exec server npm run prisma:migrate",
+    "prisma:generate": "docker-compose exec server npm run prisma:generate",
+    "prisma:studio": "docker-compose up -d prisma-studio && echo 'Prisma Studio running at http://localhost:5555'",
+    "prisma:studio:stop": "docker-compose stop prisma-studio",
+    "dev": "docker-compose up -d && docker-compose logs -f client server",
+    "dev:build": "docker-compose build && docker-compose up -d && docker-compose logs -f client server",
+    "stop": "docker-compose stop",
+    "start": "docker-compose start"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.6.0"
+  }
+}
