@@ -1,5 +1,5 @@
 import { useDroppable } from "@dnd-kit/core";
-import { formatDayHeader, isToday } from "../../utils/dateHelpers";
+import { formatDayHeader, isToday, DAY_HEADER_HEIGHT } from "../../utils/dateHelpers";
 import type { ReactNode, MouseEvent } from "react";
 
 interface DayColumnProps {
@@ -26,7 +26,8 @@ export function DayColumn({ date, children, onDoubleClick }: DayColumnProps) {
   const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!onDoubleClick) return;
 
-    // Get the click position relative to the day column
+    // Get the click position relative to the drop zone (not the entire column)
+    // e.currentTarget is the drop zone div, which is correct
     const rect = e.currentTarget.getBoundingClientRect();
     const relativeY = e.clientY - rect.top;
 
@@ -44,13 +45,14 @@ export function DayColumn({ date, children, onDoubleClick }: DayColumnProps) {
 
   return (
     <div className="relative h-full flex flex-col border-r-1 border-purple-600">
-      {/* Day header */}
+      {/* Day header - height should match TimeGrid offset */}
       <div
         className={`
           sticky top-0 z-10 px-2 py-2 text-center text-sm
           border-b-1
           ${today ? "font-semibold text-amber-200" : "text-teal-500"}
         `}
+        style={{ height: `${DAY_HEADER_HEIGHT}px` }}
       >
         {formatDayHeader(date)}
       </div>

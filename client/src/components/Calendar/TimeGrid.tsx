@@ -1,10 +1,10 @@
-import { formatHourLabel, getHoursInDay } from "../../utils/dateHelpers";
+import { formatHourLabel, getHoursInDay, DAY_HEADER_HEIGHT } from "../../utils/dateHelpers";
 
 export function TimeGrid() {
   const hours = getHoursInDay();
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-0">
+    <div className="absolute inset-0 pointer-events-none z-0" style={{ top: `${DAY_HEADER_HEIGHT}px` }}>
       {/* Grid lines */}
       <div className="absolute left-12 right-12 top-0 bottom-0 z-10">
         {/* Horizontal lines (time markers) */}

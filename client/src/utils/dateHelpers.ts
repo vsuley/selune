@@ -15,6 +15,12 @@ import {
 export type WeekStart = 0 | 1; // 0 = Sunday, 1 = Monday
 
 /**
+ * Height of the day column header in pixels
+ * This is used to offset the TimeGrid and event positioning
+ */
+export const DAY_HEADER_HEIGHT = 31;
+
+/**
  * Get the start of the week for a given date
  */
 export function getWeekStart(date: Date, weekStartsOn: WeekStart): Date {
