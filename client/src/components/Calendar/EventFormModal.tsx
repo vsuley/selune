@@ -1,34 +1,49 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { format } from "date-fns";
-import type { CreateEventData } from "../../services/api";
+import type { CreateEventData, Event, UpdateEventData } from "../../services/api";
 
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateEventData) => void;
+  onUpdate?: (id: string, data: UpdateEventData) => void;
   initialStartTime?: Date;
+  editingEvent?: Event;
 }
 
 export function EventFormModal({
   isOpen,
   onClose,
   onSubmit,
+  onUpdate,
   initialStartTime,
+  editingEvent,
 }: EventFormModalProps) {
   const [title, setTitle] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Reset form when modal opens
+  const isEditMode = !!editingEvent;
+
+  // Reset form when modal opens, or populate with event data if editing
   useEffect(() => {
     if (isOpen) {
-      setTitle("");
-      setDurationMinutes(60);
-      setCategory("");
-      setNotes("");
+      if (editingEvent) {
+        // Editing mode - populate with event data
+        setTitle(editingEvent.title);
+        setDurationMinutes(editingEvent.durationMinutes);
+        setCategory(editingEvent.category || "");
+        setNotes(editingEvent.notes || "");
+      } else {
+        // Create mode - reset to defaults
+        setTitle("");
+        setDurationMinutes(60);
+        setCategory("");
+        setNotes("");
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editingEvent]);
 
   if (!isOpen) return null;
 
@@ -39,15 +54,29 @@ export function EventFormModal({
       return;
     }
 
-    const eventData: CreateEventData = {
-      title: title.trim(),
-      startTime: initialStartTime ? initialStartTime.toISOString() : null,
-      durationMinutes,
-      category: category.trim() || "default",
-      notes: notes.trim(),
-    };
+    if (isEditMode && editingEvent && onUpdate) {
+      // Update existing event
+      const updateData: UpdateEventData = {
+        title: title.trim(),
+        durationMinutes,
+        category: category.trim() || "default",
+        notes: notes.trim(),
+      };
 
-    onSubmit(eventData);
+      onUpdate(editingEvent.id, updateData);
+    } else {
+      // Create new event
+      const eventData: CreateEventData = {
+        title: title.trim(),
+        startTime: initialStartTime ? initialStartTime.toISOString() : null,
+        durationMinutes,
+        category: category.trim() || "default",
+        notes: notes.trim(),
+      };
+
+      onSubmit(eventData);
+    }
+
     onClose();
   };
 
@@ -63,12 +92,21 @@ export function EventFormModal({
       onClick={handleBackdropClick}
     >
       <div className="border-1 rounded-lg w-full max-w-md p-6 bg-zinc-900 text-yellow-600">
-        <h2 className="text-2xl font-bold mb-4 text-sky-500">New Event</h2>
+        <h2 className="text-2xl font-bold mb-4 text-sky-500">
+          {isEditMode ? "Edit Event" : "New Event"}
+        </h2>
 
-        {initialStartTime && (
+        {initialStartTime && !isEditMode && (
           <div className="mb-4 text-sm">
             {format(initialStartTime, "EEEE, MMM d, yyyy")} at{" "}
             {format(initialStartTime, "h:mm a")}
+          </div>
+        )}
+
+        {isEditMode && editingEvent?.startTime && (
+          <div className="mb-4 text-sm">
+            {format(editingEvent.startTime, "EEEE, MMM d, yyyy")} at{" "}
+            {format(editingEvent.startTime, "h:mm a")}
           </div>
         )}
 
@@ -158,7 +196,7 @@ export function EventFormModal({
               type="submit"
               className="flex-1 px-4 py-2 rounded-lg bg-fuchsia-700 hover:bg-fuchsia-500 transition-all text-white font-semibold"
             >
-              Create Event
+              {isEditMode ? "Update Event" : "Create Event"}
             </button>
           </div>
         </form>

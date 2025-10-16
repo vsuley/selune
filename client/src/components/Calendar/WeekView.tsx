@@ -28,7 +28,7 @@ import {
   useUpdateEvent,
   useCreateEvent,
 } from "../../hooks/useEvents";
-import type { Event, CreateEventData } from "../../services/api";
+import type { Event, CreateEventData, UpdateEventData } from "../../services/api";
 
 export function WeekView() {
   const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
@@ -37,6 +37,7 @@ export function WeekView() {
   const [newEventStartTime, setNewEventStartTime] = useState<
     Date | undefined
   >();
+  const [editingEvent, setEditingEvent] = useState<Event | undefined>();
 
   const weekDays = useMemo(
     () => getWeekDays(selectedDate, weekStartsOn),
@@ -81,11 +82,22 @@ export function WeekView() {
     startTime.setHours(time.hours, time.minutes, 0, 0);
 
     setNewEventStartTime(startTime);
+    setEditingEvent(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEventDoubleClick = (event: Event) => {
+    setEditingEvent(event);
+    setNewEventStartTime(undefined);
     setIsModalOpen(true);
   };
 
   const handleCreateEvent = (data: CreateEventData) => {
     createEventMutation.mutate(data);
+  };
+
+  const handleUpdateEvent = (id: string, data: UpdateEventData) => {
+    updateEventMutation.mutate({ id, data });
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -302,6 +314,7 @@ export function WeekView() {
                       <EventCard
                         key={event.id}
                         event={event as Event & { startTime: Date }}
+                        onDoubleClick={handleEventDoubleClick}
                       />
                     ))}
                   </DayColumn>
@@ -319,12 +332,18 @@ export function WeekView() {
         </DndContext>
       </div>
 
-      {/* Event creation modal */}
+      {/* Event creation/editing modal */}
       <EventFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingEvent(undefined);
+          setNewEventStartTime(undefined);
+        }}
         onSubmit={handleCreateEvent}
+        onUpdate={handleUpdateEvent}
         {...(newEventStartTime && { initialStartTime: newEventStartTime })}
+        {...(editingEvent && { editingEvent })}
       />
     </div>
   );

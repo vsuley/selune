@@ -14,6 +14,7 @@ interface Event {
 
 interface EventCardProps {
   event: Event;
+  onDoubleClick?: (event: Event) => void;
 }
 
 // Category color mapping
@@ -36,7 +37,7 @@ const categoryColors = {
   },
 };
 
-export function EventCard({ event }: EventCardProps) {
+export function EventCard({ event, onDoubleClick }: EventCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: event.id,
@@ -45,6 +46,13 @@ export function EventCard({ event }: EventCardProps) {
         type: "event",
       },
     });
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDoubleClick) {
+      onDoubleClick(event);
+    }
+  };
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -76,6 +84,7 @@ export function EventCard({ event }: EventCardProps) {
         ${isChild ? "ml-2 border-dashed" : "border-solid"}
         bg-opacity-20 backdrop-blur-sm
       `}
+      onDoubleClick={handleDoubleClick}
       {...listeners}
       {...attributes}
     >
