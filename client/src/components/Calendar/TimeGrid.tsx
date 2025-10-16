@@ -5,21 +5,8 @@ export function TimeGrid() {
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0">
-      {/* Time labels column */}
-      <div className="absolute left-0 top-0 w-16 h-full z-10">
-        {hours.map((hour) => (
-          <div
-            key={hour}
-            className="absolute left-0 w-full text-xs text-amber-500"
-            style={{ top: `${hour * 60}px` }}
-          >
-            <span className="px-2">{formatHourLabel(hour)}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Grid lines */}
-      <div className="absolute left-16 right-0 top-0 bottom-0 z-10">
+      <div className="absolute left-12 right-12 top-0 bottom-0 z-10">
         {/* Horizontal lines (time markers) */}
         <div className="absolute inset-0 z-10">
           {hours.map((hour) => (
@@ -66,6 +53,32 @@ export function TimeGrid() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Left time labels */}
+      <div className="absolute left-0 top-0 w-12 h-full z-10">
+        {hours.map((hour) => (
+          <div
+            key={`left-${hour}`}
+            className="absolute w-full text-[10px] font-semibold text-amber-500 text-right pr-2"
+            style={{ top: `${hour * 60 - 8}px` }}
+          >
+            {formatHourLabel(hour)}
+          </div>
+        ))}
+      </div>
+
+      {/* Right time labels */}
+      <div className="absolute right-0 top-0 w-12 h-full z-10">
+        {hours.map((hour) => (
+          <div
+            key={`right-${hour}`}
+            className="absolute w-full text-[10px] font-semibold text-amber-500 text-left pl-2"
+            style={{ top: `${hour * 60 - 8}px` }}
+          >
+            {formatHourLabel(hour)}
+          </div>
+        ))}
       </div>
     </div>
   );
