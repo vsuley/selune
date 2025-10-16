@@ -22,12 +22,15 @@ import {
 import { TimeGrid } from './TimeGrid';
 import { DayColumn } from './DayColumn';
 import { EventCard } from './EventCard';
-import { useEvents, useUpdateEvent } from '../../hooks/useEvents';
-import type { Event } from '../../services/api';
+import { EventFormModal } from './EventFormModal';
+import { useEvents, useUpdateEvent, useCreateEvent } from '../../hooks/useEvents';
+import type { Event, CreateEventData } from '../../services/api';
 
 export function WeekView() {
   const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newEventStartTime, setNewEventStartTime] = useState<Date | undefined>();
 
   const weekDays = useMemo(
     () => getWeekDays(selectedDate, weekStartsOn),
@@ -40,6 +43,7 @@ export function WeekView() {
   // Fetch events for the current week
   const { data: events = [], isLoading, error } = useEvents(weekStart, weekEnd);
   const updateEventMutation = useUpdateEvent();
+  const createEventMutation = useCreateEvent();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -60,6 +64,19 @@ export function WeekView() {
 
   const handleToday = () => {
     setSelectedDate(new Date());
+  };
+
+  const handleDayDoubleClick = (date: Date, time: { hours: number; minutes: number }) => {
+    // Create the start time from the clicked date and time
+    const startTime = new Date(date);
+    startTime.setHours(time.hours, time.minutes, 0, 0);
+
+    setNewEventStartTime(startTime);
+    setIsModalOpen(true);
+  };
+
+  const handleCreateEvent = (data: CreateEventData) => {
+    createEventMutation.mutate(data);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -263,7 +280,7 @@ export function WeekView() {
                 const dayEvents = eventsByDay[dayKey] || [];
 
                 return (
-                  <DayColumn key={dayKey} date={day}>
+                  <DayColumn key={dayKey} date={day} onDoubleClick={handleDayDoubleClick}>
                     {dayEvents.map((event) => (
                       <EventCard key={event.id} event={event} />
                     ))}
@@ -279,6 +296,14 @@ export function WeekView() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Event creation modal */}
+      <EventFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateEvent}
+        initialStartTime={newEventStartTime}
+      />
     </div>
   );
 }

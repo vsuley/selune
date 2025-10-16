@@ -1,13 +1,14 @@
 import { useDroppable } from '@dnd-kit/core';
 import { formatDayHeader, isToday } from '../../utils/dateHelpers';
-import type { ReactNode } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 
 interface DayColumnProps {
   date: Date;
   children?: ReactNode;
+  onDoubleClick?: (date: Date, time: { hours: number; minutes: number }) => void;
 }
 
-export function DayColumn({ date, children }: DayColumnProps) {
+export function DayColumn({ date, children, onDoubleClick }: DayColumnProps) {
   const dayKey = date.toISOString().split('T')[0];
   const { setNodeRef, isOver } = useDroppable({
     id: dayKey,
@@ -18,6 +19,25 @@ export function DayColumn({ date, children }: DayColumnProps) {
   });
 
   const today = isToday(date);
+
+  const handleDoubleClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (!onDoubleClick) return;
+
+    // Get the click position relative to the day column
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+
+    // Calculate time based on position (1px = 1 minute)
+    const totalMinutes = Math.floor(relativeY);
+
+    // Round down to nearest 15-minute increment
+    const roundedMinutes = Math.floor(totalMinutes / 15) * 15;
+
+    const hours = Math.floor(roundedMinutes / 60);
+    const minutes = roundedMinutes % 60;
+
+    onDoubleClick(date, { hours, minutes });
+  };
 
   return (
     <div className="relative h-full flex flex-col border-r-2" style={{ borderRightColor: 'rgba(131, 56, 236, 0.5)' }}>
@@ -47,6 +67,7 @@ export function DayColumn({ date, children }: DayColumnProps) {
           ${isOver ? 'bg-synthwave-neon-purple/10' : 'bg-transparent'}
         `}
         style={{ minHeight: '1440px' }} // 24 hours * 60px
+        onDoubleClick={handleDoubleClick}
       >
         {children}
       </div>
