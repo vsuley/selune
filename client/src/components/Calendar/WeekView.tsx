@@ -22,43 +22,11 @@ import {
 import { TimeGrid } from './TimeGrid';
 import { DayColumn } from './DayColumn';
 import { EventCard } from './EventCard';
-
-// Mock events for demonstration
-interface Event {
-  id: string;
-  title: string;
-  startTime: Date;
-  durationMinutes: number;
-  category?: string;
-  parentEventId?: string | null;
-}
+import { useEvents, useUpdateEvent } from '../../hooks/useEvents';
+import type { Event } from '../../services/api';
 
 export function WeekView() {
   const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: '1',
-      title: 'Morning Workout',
-      startTime: new Date(2025, 9, 15, 7, 0),
-      durationMinutes: 60,
-      category: 'health',
-    },
-    {
-      id: '2',
-      title: 'Team Meeting',
-      startTime: new Date(2025, 9, 15, 10, 0),
-      durationMinutes: 90,
-      category: 'work',
-    },
-    {
-      id: '3',
-      title: 'Lunch Break',
-      startTime: new Date(2025, 9, 15, 12, 30),
-      durationMinutes: 45,
-      category: 'personal',
-    },
-  ]);
-
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
 
   const weekDays = useMemo(
@@ -68,6 +36,10 @@ export function WeekView() {
 
   const weekStart = getWeekStart(selectedDate, weekStartsOn);
   const weekEnd = getWeekEnd(selectedDate, weekStartsOn);
+
+  // Fetch events for the current week
+  const { data: events = [], isLoading, error } = useEvents(weekStart, weekEnd);
+  const updateEventMutation = useUpdateEvent();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,7 +78,7 @@ export function WeekView() {
     const draggedEvent = active.data.current?.['event'] as Event | undefined;
     const overData = over.data.current;
 
-    if (!draggedEvent || !overData) return;
+    if (!draggedEvent || !overData || !draggedEvent.startTime) return;
 
     // Calculate new time based on drop position
     const targetDate = overData['date'] as Date | undefined;
@@ -137,17 +109,16 @@ export function WeekView() {
     // Snap to 15-minute increments
     newStartTime = snapToQuarterHour(newStartTime);
 
-    // Update the event
-    setEvents((prev) =>
-      prev.map((evt) =>
-        evt.id === draggedEvent.id
-          ? { ...evt, startTime: newStartTime }
-          : evt
-      )
-    );
+    // Update the event on the server
+    updateEventMutation.mutate({
+      id: draggedEvent.id,
+      data: {
+        startTime: newStartTime.toISOString(),
+      },
+    });
   };
 
-  // Group events by day
+  // Group events by day (only scheduled events with startTime)
   const eventsByDay = useMemo(() => {
     const grouped: Record<string, Event[]> = {};
 
@@ -157,14 +128,38 @@ export function WeekView() {
     });
 
     events.forEach((event) => {
-      const eventDayKey = event.startTime.toISOString().split('T')[0];
-      if (grouped[eventDayKey]) {
-        grouped[eventDayKey].push(event);
+      // Only include events that have a startTime (scheduled events)
+      if (event.startTime) {
+        const eventDayKey = event.startTime.toISOString().split('T')[0];
+        if (grouped[eventDayKey]) {
+          grouped[eventDayKey].push(event);
+        }
       }
     });
 
     return grouped;
   }, [weekDays, events]);
+
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-synthwave-bg-dark">
+        <div className="text-synthwave-neon-teal text-xl font-mono">
+          Loading events...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-synthwave-bg-dark">
+        <div className="text-synthwave-neon-pink text-xl font-mono">
+          Error loading events: {(error as Error).message}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-synthwave-bg-dark">
