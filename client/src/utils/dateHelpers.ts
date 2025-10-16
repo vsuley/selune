@@ -193,3 +193,11 @@ export function getColumnIndex(date: Date, weekStart: Date): number {
   const daysDiff = differenceInMinutes(startOfDay(date), startOfDay(weekStart)) / (24 * 60);
   return Math.floor(daysDiff);
 }
+
+/**
+ * Check if an event is in the past (end time has passed)
+ */
+export function isPastEvent(startTime: Date, durationMinutes: number): boolean {
+  const endTime = addMinutes(startTime, durationMinutes);
+  return endTime < new Date();
+}

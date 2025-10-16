@@ -1,7 +1,11 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { format } from "date-fns";
-import { getDurationHeight, getTimePosition } from "../../utils/dateHelpers";
+import {
+  getDurationHeight,
+  getTimePosition,
+  isPastEvent,
+} from "../../utils/dateHelpers";
 
 interface Event {
   id: string;
@@ -67,6 +71,7 @@ export function EventCard({ event, onDoubleClick }: EventCardProps) {
     categoryColors[event.category as keyof typeof categoryColors] ||
     categoryColors.default;
   const isChild = !!event.parentEventId;
+  const isPast = isPastEvent(event.startTime, event.durationMinutes);
 
   return (
     <div
@@ -79,6 +84,8 @@ export function EventCard({ event, onDoubleClick }: EventCardProps) {
         ${
           isDragging
             ? "opacity-50 scale-105 z-50"
+            : isPast
+            ? "opacity-50 hover:opacity-50 z-10"
             : "opacity-90 hover:opacity-100 z-10"
         }
         ${isChild ? "ml-2 border-dashed" : "border-solid"}
