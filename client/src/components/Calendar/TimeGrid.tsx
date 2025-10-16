@@ -1,4 +1,4 @@
-import { formatHourLabel, getHoursInDay } from '../../utils/dateHelpers';
+import { formatHourLabel, getHoursInDay } from "../../utils/dateHelpers";
 
 interface TimeGridProps {
   daysCount: number;
@@ -14,7 +14,7 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
         {hours.map((hour) => (
           <div
             key={hour}
-            className="absolute left-0 w-full text-xs text-synthwave-neon-teal font-mono"
+            className="absolute left-0 w-full text-xs text-amber-500"
             style={{ top: `${hour * 60}px` }}
           >
             <span className="px-2">{formatHourLabel(hour)}</span>
@@ -33,8 +33,8 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
                 className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60}px`,
-                  borderTop: '2px solid rgba(131, 56, 236, 0.5)',
-                  height: '0px',
+                  borderTop: "1px solid rgba(131, 70, 236, 0.6)",
+                  height: "0px",
                 }}
               />
 
@@ -43,8 +43,8 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
                 className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 15}px`,
-                  borderTop: '1px dotted rgba(131, 56, 236, 0.3)',
-                  height: '0px',
+                  borderTop: "1px dotted rgba(131, 56, 236, 0.2)",
+                  height: "0px",
                 }}
               />
 
@@ -53,8 +53,8 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
                 className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 30}px`,
-                  borderTop: '1px dashed rgba(131, 56, 236, 0.3)',
-                  height: '0px',
+                  borderTop: "1px dashed rgba(131, 56, 236, 0.3)",
+                  height: "0px",
                 }}
               />
 
@@ -63,8 +63,8 @@ export function TimeGrid({ daysCount }: TimeGridProps) {
                 className="absolute left-0 right-0"
                 style={{
                   top: `${hour * 60 + 45}px`,
-                  borderTop: '1px dotted rgba(131, 56, 236, 0.3)',
-                  height: '0px',
+                  borderTop: "1px dotted rgba(131, 56, 236, 0.2)",
+                  height: "0px",
                 }}
               />
             </div>

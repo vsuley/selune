@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -6,9 +6,9 @@ import {
   useSensors,
   PointerSensor,
   KeyboardSensor,
-} from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { useUIStore } from '../../stores/uiStore';
+} from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { useUIStore } from "../../stores/uiStore";
 import {
   getWeekDays,
   formatWeekRange,
@@ -18,19 +18,25 @@ import {
   getWeekEnd,
   snapToQuarterHour,
   getColumnIndex,
-} from '../../utils/dateHelpers';
-import { TimeGrid } from './TimeGrid';
-import { DayColumn } from './DayColumn';
-import { EventCard } from './EventCard';
-import { EventFormModal } from './EventFormModal';
-import { useEvents, useUpdateEvent, useCreateEvent } from '../../hooks/useEvents';
-import type { Event, CreateEventData } from '../../services/api';
+} from "../../utils/dateHelpers";
+import { TimeGrid } from "./TimeGrid";
+import { DayColumn } from "./DayColumn";
+import { EventCard } from "./EventCard";
+import { EventFormModal } from "./EventFormModal";
+import {
+  useEvents,
+  useUpdateEvent,
+  useCreateEvent,
+} from "../../hooks/useEvents";
+import type { Event, CreateEventData } from "../../services/api";
 
 export function WeekView() {
   const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newEventStartTime, setNewEventStartTime] = useState<Date | undefined>();
+  const [newEventStartTime, setNewEventStartTime] = useState<
+    Date | undefined
+  >();
 
   const weekDays = useMemo(
     () => getWeekDays(selectedDate, weekStartsOn),
@@ -66,7 +72,10 @@ export function WeekView() {
     setSelectedDate(new Date());
   };
 
-  const handleDayDoubleClick = (date: Date, time: { hours: number; minutes: number }) => {
+  const handleDayDoubleClick = (
+    date: Date,
+    time: { hours: number; minutes: number }
+  ) => {
     // Create the start time from the clicked date and time
     const startTime = new Date(date);
     startTime.setHours(time.hours, time.minutes, 0, 0);
@@ -80,7 +89,9 @@ export function WeekView() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    const draggedEvent = event.active.data.current?.['event'] as Event | undefined;
+    const draggedEvent = event.active.data.current?.["event"] as
+      | Event
+      | undefined;
     if (draggedEvent) {
       setActiveEvent(draggedEvent);
     }
@@ -92,13 +103,13 @@ export function WeekView() {
 
     if (!over) return;
 
-    const draggedEvent = active.data.current?.['event'] as Event | undefined;
+    const draggedEvent = active.data.current?.["event"] as Event | undefined;
     const overData = over.data.current;
 
     if (!draggedEvent || !overData || !draggedEvent.startTime) return;
 
     // Calculate new time based on drop position
-    const targetDate = overData['date'] as Date | undefined;
+    const targetDate = overData["date"] as Date | undefined;
     const delta = event.delta;
 
     // Get the new position
@@ -120,7 +131,9 @@ export function WeekView() {
     // Apply vertical delta (time change)
     if (delta.y !== 0) {
       const minutesChange = delta.y; // 1px = 1 minute
-      newStartTime = new Date(newStartTime.getTime() + minutesChange * 60 * 1000);
+      newStartTime = new Date(
+        newStartTime.getTime() + minutesChange * 60 * 1000
+      );
     }
 
     // Snap to 15-minute increments
@@ -140,14 +153,14 @@ export function WeekView() {
     const grouped: Record<string, Event[]> = {};
 
     weekDays.forEach((day) => {
-      const dayKey = day.toISOString().split('T')[0];
+      const dayKey = day.toISOString().split("T")[0];
       grouped[dayKey] = [];
     });
 
     events.forEach((event) => {
       // Only include events that have a startTime (scheduled events)
       if (event.startTime) {
-        const eventDayKey = event.startTime.toISOString().split('T')[0];
+        const eventDayKey = event.startTime.toISOString().split("T")[0];
         if (grouped[eventDayKey]) {
           grouped[eventDayKey].push(event);
         }
@@ -179,13 +192,14 @@ export function WeekView() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-synthwave-bg-dark">
+    <div className="h-screen flex flex-col bg-purple-950">
       {/* Header with navigation */}
-      <div className="bg-synthwave-bg border-b-2 border-synthwave-neon-purple p-4 flex items-center justify-between">
+      <div className="border-b-2 p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={handleToday}
-            className="px-4 py-2 bg-synthwave-neon-teal text-synthwave-bg-dark font-semibold rounded-lg hover:shadow-neon-teal transition-all"
+            className="px-4 py-2 font-semibold rounded-lg text-amber-300 hover:text-amber-200 
+            hover:shadow-neon-teal transition-all"
           >
             Today
           </button>
@@ -193,7 +207,7 @@ export function WeekView() {
           <div className="flex items-center gap-2">
             <button
               onClick={handlePreviousWeek}
-              className="p-2 text-synthwave-neon-purple hover:text-synthwave-neon-pink transition-colors"
+              className="p-2 transition-colors stroke-amber-300 hover:stroke-amber-600"
               aria-label="Previous week"
             >
               <svg
@@ -205,7 +219,7 @@ export function WeekView() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={1}
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
@@ -213,7 +227,7 @@ export function WeekView() {
 
             <button
               onClick={handleNextWeek}
-              className="p-2 text-synthwave-neon-purple hover:text-synthwave-neon-pink transition-colors"
+              className="p-2 transition-colors"
               aria-label="Next week"
             >
               <svg
@@ -232,19 +246,21 @@ export function WeekView() {
             </button>
           </div>
 
-          <h2 className="text-xl font-bold text-synthwave-neon-teal font-mono">
+          <h2 className="text-xl text-amber-500">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-synthwave-neon-purple text-sm font-mono">
-            Week starts on:
-          </label>
+          <label className="text-amber-600">Week starts on:</label>
           <select
             value={weekStartsOn}
-            onChange={(e) => useUIStore.getState().setWeekStartsOn(Number(e.target.value) as 0 | 1)}
-            className="px-3 py-1 bg-synthwave-bg-light text-synthwave-neon-teal border-2 border-synthwave-neon-purple rounded-lg font-mono"
+            onChange={(e) =>
+              useUIStore
+                .getState()
+                .setWeekStartsOn(Number(e.target.value) as 0 | 1)
+            }
+            className="px-3 py-1 border-1 rounded-lg text-amber-200"
           >
             <option value={0}>Sunday</option>
             <option value={1}>Monday</option>
@@ -259,7 +275,7 @@ export function WeekView() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="relative" style={{ minHeight: '1440px' }}>
+          <div className="relative" style={{ minHeight: "1440px" }}>
             {/* Time grid background */}
             <TimeGrid daysCount={7} />
 
@@ -267,8 +283,8 @@ export function WeekView() {
             <div
               className="grid relative"
               style={{
-                gridTemplateColumns: '64px repeat(7, 1fr)',
-                minHeight: '1440px', // 24 hours * 60px
+                gridTemplateColumns: "64px repeat(7, 1fr)",
+                minHeight: "1440px", // 24 hours * 60px
               }}
             >
               {/* Empty corner for time labels */}
@@ -276,11 +292,15 @@ export function WeekView() {
 
               {/* Day columns with events */}
               {weekDays.map((day) => {
-                const dayKey = day.toISOString().split('T')[0];
+                const dayKey = day.toISOString().split("T")[0];
                 const dayEvents = eventsByDay[dayKey] || [];
 
                 return (
-                  <DayColumn key={dayKey} date={day} onDoubleClick={handleDayDoubleClick}>
+                  <DayColumn
+                    key={dayKey}
+                    date={day}
+                    onDoubleClick={handleDayDoubleClick}
+                  >
                     {dayEvents.map((event) => (
                       <EventCard key={event.id} event={event} />
                     ))}

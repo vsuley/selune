@@ -1,6 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { format } from 'date-fns';
-import type { CreateEventData } from '../../services/api';
+import { useState, useEffect, type FormEvent } from "react";
+import { format } from "date-fns";
+import type { CreateEventData } from "../../services/api";
 
 interface EventFormModalProps {
   isOpen: boolean;
@@ -9,19 +9,24 @@ interface EventFormModalProps {
   initialStartTime?: Date;
 }
 
-export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: EventFormModalProps) {
-  const [title, setTitle] = useState('');
+export function EventFormModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialStartTime,
+}: EventFormModalProps) {
+  const [title, setTitle] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [category, setCategory] = useState('');
-  const [notes, setNotes] = useState('');
+  const [category, setCategory] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setTitle('');
+      setTitle("");
       setDurationMinutes(60);
-      setCategory('');
-      setNotes('');
+      setCategory("");
+      setNotes("");
     }
   }, [isOpen]);
 
@@ -38,7 +43,7 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
       title: title.trim(),
       startTime: initialStartTime ? initialStartTime.toISOString() : null,
       durationMinutes,
-      category: category.trim() || 'default',
+      category: category.trim() || "default",
       notes: notes.trim(),
     };
 
@@ -54,24 +59,26 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-800/70"
       onClick={handleBackdropClick}
     >
-      <div className="bg-synthwave-bg border-2 border-synthwave-neon-purple rounded-lg shadow-neon-purple w-full max-w-md p-6">
-        <h2 className="text-2xl font-bold text-synthwave-neon-teal mb-4 font-mono">
-          New Event
-        </h2>
+      <div className="border-1 rounded-lg w-full max-w-md p-6 bg-zinc-900 text-yellow-600">
+        <h2 className="text-2xl font-bold mb-4 text-sky-500">New Event</h2>
 
         {initialStartTime && (
-          <div className="mb-4 text-sm text-synthwave-neon-purple font-mono">
-            {format(initialStartTime, 'EEEE, MMM d, yyyy')} at {format(initialStartTime, 'h:mm a')}
+          <div className="mb-4 text-sm">
+            {format(initialStartTime, "EEEE, MMM d, yyyy")} at{" "}
+            {format(initialStartTime, "h:mm a")}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-synthwave-neon-teal mb-1 font-mono">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium mb-1 text-sky-500"
+            >
               Title *
             </label>
             <input
@@ -79,7 +86,7 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 bg-synthwave-bg-light text-synthwave-neon-teal border-2 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-synthwave-neon-pink font-mono"
+              className="w-full px-3 py-2 border-1 rounded-lg focus:outline-none focus:border-amber-300"
               placeholder="Event title"
               autoFocus
               required
@@ -88,7 +95,10 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
 
           {/* Duration */}
           <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-synthwave-neon-teal mb-1 font-mono">
+            <label
+              htmlFor="duration"
+              className="block text-sm font-medium mb-1 text-sky-500"
+            >
               Duration (minutes)
             </label>
             <input
@@ -98,13 +108,16 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
               step="15"
               value={durationMinutes}
               onChange={(e) => setDurationMinutes(Number(e.target.value))}
-              className="w-full px-3 py-2 bg-synthwave-bg-light text-synthwave-neon-teal border-2 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-synthwave-neon-pink font-mono"
+              className="w-full px-3 py-2 border-1 rounded-lg focus:outline-none focus:border-amber-300"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label htmlFor="category" className="block text-sm font-medium text-synthwave-neon-teal mb-1 font-mono">
+            <label
+              htmlFor="category"
+              className="block text-sm font-medium mb-1 text-sky-500"
+            >
               Category
             </label>
             <input
@@ -112,14 +125,14 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-synthwave-bg-light text-synthwave-neon-teal border-2 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-synthwave-neon-pink font-mono"
+              className="w-full px-3 py-2  border-1 rounded-lg focus:outline-none focus:border-amber-300"
               placeholder="work, personal, health, etc."
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-synthwave-neon-teal mb-1 font-mono">
+            <label htmlFor="notes" className="block text-sm font-medium mb-1">
               Notes
             </label>
             <textarea
@@ -127,7 +140,7 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 bg-synthwave-bg-light text-synthwave-neon-teal border-2 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-synthwave-neon-pink font-mono resize-none"
+              className="w-full px-3 py-2 border-1 border-synthwave-neon-purple rounded-lg focus:outline-none focus:border-amber-300 resize-none"
               placeholder="Additional notes..."
             />
           </div>
@@ -137,13 +150,13 @@ export function EventFormModal({ isOpen, onClose, onSubmit, initialStartTime }: 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-synthwave-bg-light text-synthwave-neon-purple border-2 border-synthwave-neon-purple rounded-lg hover:bg-synthwave-neon-purple/10 transition-colors font-mono font-semibold"
+              className="flex-1 px-4 py-2 border-1 rounded-lg hover:bg-zinc-900/10 transition-colors font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-synthwave-neon-teal text-synthwave-bg-dark rounded-lg hover:shadow-neon-teal transition-all font-mono font-semibold"
+              className="flex-1 px-4 py-2 rounded-lg bg-fuchsia-700 hover:bg-fuchsia-500 transition-all text-white font-semibold"
             >
               Create Event
             </button>
