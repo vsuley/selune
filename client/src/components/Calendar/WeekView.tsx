@@ -28,7 +28,11 @@ import {
   useUpdateEvent,
   useCreateEvent,
 } from "../../hooks/useEvents";
-import type { Event, CreateEventData, UpdateEventData } from "../../services/api";
+import type {
+  Event,
+  CreateEventData,
+  UpdateEventData,
+} from "../../services/api";
 
 export function WeekView() {
   const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
@@ -204,7 +208,7 @@ export function WeekView() {
   return (
     <div className="h-screen flex flex-col bg-purple-950">
       {/* Header with navigation */}
-      <div className="border-b-2 p-4 flex items-center justify-between">
+      <div className="border-b-2 p-4 flex items-center justify-between bg-zinc-800">
         <div className="flex items-center gap-4">
           <button
             onClick={handleToday}
@@ -216,7 +220,7 @@ export function WeekView() {
           <div className="flex items-center gap-2">
             <button
               onClick={handlePreviousWeek}
-              className="p-2 transition-colors stroke-amber-300 hover:stroke-amber-600"
+              className="p-2 transition-colors text-amber-500 hover:text-amber-400"
               aria-label="Previous week"
             >
               <svg
@@ -236,7 +240,7 @@ export function WeekView() {
 
             <button
               onClick={handleNextWeek}
-              className="p-2 transition-colors"
+              className="p-2 transition-colors text-amber-500 hover:text-amber-400"
               aria-label="Next week"
             >
               <svg
@@ -255,7 +259,8 @@ export function WeekView() {
             </button>
           </div>
 
-          <h2 className="text-xl text-amber-500">
+          {/* Date range display */}
+          <h2 className="text-xl font-bold text-amber-500">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
         </div>
