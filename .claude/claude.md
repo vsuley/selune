@@ -176,14 +176,6 @@ type RecurrencePattern = {
   frequency: 'weekly' | 'monthly' | 'yearly' | 'every_n_days' | 'n_per_period' | 'nth_weekday_of_month';
   frequencyValue: number;
   durationMinutes: number;
-  timePreferences: {
-    preferred: 'morning' | 'afternoon' | 'evening' | 'any';
-    acceptable: ('morning' | 'afternoon' | 'evening')[];
-  };
-  dayPreferences: {
-    preferred: ('weekday' | 'weekend')[];
-    acceptable: 'any' | ('weekday' | 'weekend')[];
-  };
   // For nth_weekday_of_month
   nthWeekdayConfig?: {
     weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6;  // 0=Sunday
@@ -464,10 +456,10 @@ npm run docker:prod:down        # Stop production
 
 ## Example Use Cases (for context)
 
-1. **Weekly flexible obligation**: "Clean cat water filter - weekly, morning or evening"
+1. **Weekly flexible obligation**: "Clean cat water filter - weekly"
 2. **Monthly appointment**: "Haircut - first Saturday of every month"
 3. **Time-blocked errands**: Parent "Saturday errands 2-5pm" with children "grocery", "pharmacy", "post office"
-4. **Multiple per week**: "Gym - 3x per week, prefer Mon/Wed/Fri morning"
+4. **Multiple per week**: "Gym - 3x per week"
 5. **Annual event**: "Birthday - October 15 every year"
 6. **Floating task**: "Research new laptop" - no deadline, sits in backlog until scheduled
 

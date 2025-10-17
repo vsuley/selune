@@ -38,12 +38,6 @@ model RecurrencePattern {
   // Default duration in minutes
   durationMinutes Int
 
-  // Time preferences: {preferred: "evening", acceptable: ["morning", "evening"]}
-  timePreferences Json
-
-  // Day preferences: {preferred: ["weekend"], acceptable: "any"}
-  dayPreferences Json
-
   // For nth_weekday_of_month: {weekday: 5, occurrence: 1} = "First Friday"
   // weekday: 0-6 (0=Sunday), occurrence: 1-4 or -1 (last)
   nthWeekdayConfig Json?

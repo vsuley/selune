@@ -54,8 +54,8 @@ services:
       # Mount server source for hot reload
       - ./server/src:/app/server/src
       - ./server/package.json:/app/server/package.json
-      # Mount Prisma schema (read-only for hot reload schema changes)
-      - ./server/prisma:/app/server/prisma:ro
+      # Mount Prisma schema (writable to allow migrations)
+      - ./server/prisma:/app/server/prisma
       # Preserve container's node_modules (named volume)
       - server_node_modules:/app/server/node_modules
     environment:
@@ -109,7 +109,7 @@ services:
     ports:
       - "5555:5555"
     volumes:
-      - ./server/prisma:/app/server/prisma:ro
+      - ./server/prisma:/app/server/prisma
       - server_node_modules:/app/server/node_modules
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-selune}:${POSTGRES_PASSWORD:-selune_password}@postgres:5432/${POSTGRES_DB:-selune_db}
