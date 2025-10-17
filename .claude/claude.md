@@ -192,6 +192,8 @@ type RecurrencePattern = {
     weekday: number;
     occurrence: number;
   };
+  // Flexible vs fixed scheduling
+  flexibleScheduling: boolean;  // true = backlog, false = auto-schedule
   active: boolean;
   createdAt: Date;
 };

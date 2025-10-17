@@ -48,6 +48,10 @@ model RecurrencePattern {
   // For yearly on nth weekday: {month: 11, weekday: 4, occurrence: 4} = "4th Thu of Nov (Thanksgiving)"
   yearlyNthWeekday Json?
 
+  // Flexible scheduling: true = generate in backlog (haircuts, chores)
+  // false = auto-schedule to calculated date/time (game nights, community events)
+  flexibleScheduling Boolean @default(true)
+
   // Whether this pattern is active (can be deactivated instead of deleted)
   active Boolean @default(true)
 
