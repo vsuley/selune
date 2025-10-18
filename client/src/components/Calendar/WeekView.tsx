@@ -18,11 +18,13 @@ import {
   getWeekEnd,
   snapToQuarterHour,
   getColumnIndex,
+  DAY_HEADER_HEIGHT,
 } from "../../utils/dateHelpers";
 import { TimeGrid } from "./TimeGrid";
 import { DayColumn } from "./DayColumn";
 import { EventCard } from "./EventCard";
 import { EventFormModal } from "./EventFormModal";
+import { BacklogSidebar } from "../Backlog/BacklogSidebar";
 import {
   useEvents,
   useUpdateEvent,
@@ -32,6 +34,7 @@ import type {
   Event,
   CreateEventData,
   UpdateEventData,
+  VirtualEvent,
 } from "../../services/api";
 
 export function WeekView() {
@@ -54,8 +57,11 @@ export function WeekView() {
 
   // Fetch events for the current week
   const { data, isLoading, error } = useEvents(weekStart, weekEnd);
-  const events = data?.events ?? [];
-  const virtualEvents = data?.virtualEvents ?? [];
+  const events = useMemo(() => data?.events ?? [], [data?.events]);
+  const virtualEvents = useMemo(
+    () => data?.virtualEvents ?? [],
+    [data?.virtualEvents]
+  );
   const updateEventMutation = useUpdateEvent();
   const createEventMutation = useCreateEvent();
 
@@ -107,13 +113,56 @@ export function WeekView() {
     updateEventMutation.mutate({ id, data });
   };
 
+  const handleCommitVirtualEvent = (virtualEvent: VirtualEvent) => {
+    // Commit the virtual event by creating a real event with the virtual event's data
+    // The start time will be set to the deadline (or current time as fallback)
+    const startTime = virtualEvent.deadline || new Date();
+
+    const eventData: CreateEventData = {
+      title: virtualEvent.title,
+      startTime: startTime.toISOString(),
+      durationMinutes: virtualEvent.durationMinutes,
+      patternId: virtualEvent.patternId,
+      periodKey: virtualEvent.periodKey,
+      category: virtualEvent.category,
+      isFlexible: false, // Committing makes it inflexible (scheduled)
+      isTimeBound: false, // Once scheduled, no longer time-bound
+      notes: virtualEvent.notes,
+    };
+
+    createEventMutation.mutate(eventData);
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const draggedEvent = event.active.data.current?.["event"] as
       | Event
       | undefined;
+    const virtualEvent = event.active.data.current?.["virtualEvent"] as
+      | VirtualEvent
+      | undefined;
+
     if (draggedEvent) {
       setActiveEvent(draggedEvent);
       setDraggingEventId(draggedEvent.id);
+    } else if (virtualEvent) {
+      // Convert virtual event to Event format for drag preview
+      setActiveEvent({
+        id: virtualEvent.id,
+        title: virtualEvent.title,
+        durationMinutes: virtualEvent.durationMinutes,
+        category: virtualEvent.category,
+        notes: virtualEvent.notes,
+        isFlexible: virtualEvent.isFlexible,
+        isTimeBound: false,
+        patternId: virtualEvent.patternId,
+        periodKey: virtualEvent.periodKey,
+        parentEventId: null,
+        startTime: new Date(), // Placeholder, will be set on drop
+        deadline: virtualEvent.deadline,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      setDraggingEventId(`virtual-${virtualEvent.id}`);
     }
   };
 
@@ -128,8 +177,86 @@ export function WeekView() {
     }
 
     const draggedEvent = active.data.current?.["event"] as Event | undefined;
+    const virtualEvent = active.data.current?.["virtualEvent"] as
+      | VirtualEvent
+      | undefined;
     const overData = over.data.current;
 
+    // Handle dragging a virtual event from backlog to calendar
+    if (virtualEvent && overData) {
+      const targetDate = overData["date"] as Date | undefined;
+
+      if (!targetDate) {
+        setActiveEvent(null);
+        setDraggingEventId(null);
+        return;
+      }
+
+      // Calculate the start time based on drop position
+      const columnIdx = getColumnIndex(targetDate, weekStart);
+      const targetDay = weekDays[columnIdx];
+
+      if (!targetDay) {
+        setActiveEvent(null);
+        setDraggingEventId(null);
+        return;
+      }
+
+      // Get the drop position within the day column
+      // The over.rect is the droppable zone (the inner div, not including the header)
+      // The active.rect is the dragged element's position
+      const overRect = over.rect;
+      const activeRect = active.rect.current.translated;
+
+      if (!overRect || !activeRect) {
+        setActiveEvent(null);
+        setDraggingEventId(null);
+        return;
+      }
+
+      // Calculate the Y position within the drop zone
+      // Since overRect is already the drop zone (without the header), we don't need to subtract anything
+      // The relativeY is how far down from the top of the drop zone (midnight) we are
+      const relativeY = activeRect.top - overRect.top;
+
+      // Ensure we don't get negative values
+      const minutesFromMidnight = Math.max(0, Math.floor(relativeY));
+
+      let newStartTime = new Date(targetDay);
+      newStartTime.setHours(0, 0, 0, 0);
+      newStartTime = new Date(newStartTime.getTime() + minutesFromMidnight * 60 * 1000);
+
+      // Snap to 15-minute increments
+      newStartTime = snapToQuarterHour(newStartTime);
+
+      // Create a real event from the virtual event
+      const eventData: CreateEventData = {
+        title: virtualEvent.title,
+        startTime: newStartTime.toISOString(),
+        durationMinutes: virtualEvent.durationMinutes,
+        patternId: virtualEvent.patternId,
+        periodKey: virtualEvent.periodKey,
+        category: virtualEvent.category,
+        isFlexible: false, // Scheduling makes it inflexible
+        isTimeBound: false,
+        notes: virtualEvent.notes,
+      };
+
+      createEventMutation.mutate(eventData, {
+        onSuccess: () => {
+          setActiveEvent(null);
+          setTimeout(() => setDraggingEventId(null), 100);
+        },
+        onError: () => {
+          setActiveEvent(null);
+          setDraggingEventId(null);
+        },
+      });
+
+      return;
+    }
+
+    // Handle dragging an existing event to a new time
     if (!draggedEvent || !overData || !draggedEvent.startTime) {
       setActiveEvent(null);
       setDraggingEventId(null);
@@ -235,7 +362,7 @@ export function WeekView() {
   return (
     <div className="h-screen flex flex-col bg-purple-950">
       {/* Header with navigation */}
-      <div className="border-b-2 p-4 flex items-center justify-between bg-zinc-800">
+      <div className="border-b-2 p-4 flex items-center justify-between bg-zinc-800 flex-shrink-0">
         <div className="flex items-center gap-4">
           <button
             onClick={handleToday}
@@ -309,84 +436,93 @@ export function WeekView() {
         </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="flex-1 overflow-auto">
-        <DndContext
-          sensors={sensors}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="relative" style={{ minHeight: "1440px" }}>
-            {/* Time grid background */}
-            <TimeGrid />
+      {/* Main content area with calendar and sidebar */}
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 flex overflow-hidden">
+          {/* Calendar grid */}
+          <div className="flex-1 overflow-auto">
+            <div className="relative" style={{ minHeight: "1440px" }}>
+              {/* Time grid background */}
+              <TimeGrid />
 
-            {/* Day columns */}
-            <div
-              className="grid relative"
-              style={{
-                gridTemplateColumns: "64px repeat(7, 1fr)",
-                minHeight: "1440px", // 24 hours * 60px
-              }}
-            >
-              {/* Empty corner for time labels */}
-              <div className="border-r-1 border-purple-700" />
+              {/* Day columns */}
+              <div
+                className="grid relative"
+                style={{
+                  gridTemplateColumns: "64px repeat(7, 1fr)",
+                  minHeight: "1440px", // 24 hours * 60px
+                }}
+              >
+                {/* Empty corner for time labels */}
+                <div className="border-r-1 border-purple-700" />
 
-              {/* Day columns with events */}
-              {weekDays.map((day) => {
-                const dayKey = day.toISOString().split("T")[0];
-                const dayEvents = eventsByDay[dayKey] || [];
+                {/* Day columns with events */}
+                {weekDays.map((day) => {
+                  const dayKey = day.toISOString().split("T")[0];
+                  const dayEvents = eventsByDay[dayKey] || [];
 
-                return (
-                  <DayColumn
-                    key={dayKey}
-                    date={day}
-                    onDoubleClick={handleDayDoubleClick}
-                  >
-                    {dayEvents.map((event) => (
-                      <EventCard
-                        key={event.id}
-                        event={event as Event & { startTime: Date }}
-                        onDoubleClick={handleEventDoubleClick}
-                        isBeingDragged={draggingEventId === event.id}
-                      />
-                    ))}
-                  </DayColumn>
-                );
-              })}
+                  return (
+                    <DayColumn
+                      key={dayKey}
+                      date={day}
+                      onDoubleClick={handleDayDoubleClick}
+                    >
+                      {dayEvents.map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event as Event & { startTime: Date }}
+                          onDoubleClick={handleEventDoubleClick}
+                          isBeingDragged={draggingEventId === event.id}
+                        />
+                      ))}
+                    </DayColumn>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Drag overlay - simplified preview that follows cursor */}
-          <DragOverlay
-            dropAnimation={{
-              duration: 0,
-              easing: 'ease',
-            }}
-          >
-            {activeEvent ? (
-              <div
-                className={`
-                  rounded-lg border-2 p-2 overflow-hidden
-                  bg-purple-900 border-sky-400
-                  bg-opacity-20 backdrop-blur-sm
-                  opacity-90
-                  cursor-grabbing
-                  shadow-lg
-                `}
-                style={{
-                  width: "180px",
-                  height: `${activeEvent.durationMinutes}px`,
-                  minHeight: "40px",
-                }}
-              >
-                <div className="text-white text-sm truncate">
-                  {activeEvent.title}
-                </div>
+          {/* Backlog Sidebar */}
+          <BacklogSidebar
+            virtualEvents={virtualEvents}
+            onCommit={handleCommitVirtualEvent}
+          />
+        </div>
+
+        {/* Drag overlay - simplified preview that follows cursor */}
+        <DragOverlay
+          dropAnimation={{
+            duration: 0,
+            easing: "ease",
+          }}
+        >
+          {activeEvent ? (
+            <div
+              className={`
+                rounded-lg border-2 p-2 overflow-hidden
+                bg-purple-900 border-sky-400
+                bg-opacity-20 backdrop-blur-sm
+                opacity-90
+                cursor-grabbing
+                shadow-lg
+              `}
+              style={{
+                width: "180px",
+                height: `${activeEvent.durationMinutes}px`,
+                minHeight: "40px",
+              }}
+            >
+              <div className="text-white text-sm truncate">
+                {activeEvent.title}
               </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Event creation/editing modal */}
       <EventFormModal
