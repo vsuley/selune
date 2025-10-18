@@ -12,7 +12,10 @@ import {
   parseISO,
 } from 'date-fns';
 
-export type WeekStart = 0 | 1; // 0 = Sunday, 1 = Monday
+/**
+ * ISO 8601 standard: weeks start on Monday
+ */
+const ISO_WEEK_START = 1;
 
 /**
  * Height of the day column header in pixels
@@ -21,25 +24,25 @@ export type WeekStart = 0 | 1; // 0 = Sunday, 1 = Monday
 export const DAY_HEADER_HEIGHT = 31;
 
 /**
- * Get the start of the week for a given date
+ * Get the start of the week for a given date (ISO standard: Monday)
  */
-export function getWeekStart(date: Date, weekStartsOn: WeekStart): Date {
-  return startOfWeek(date, { weekStartsOn });
+export function getWeekStart(date: Date): Date {
+  return startOfWeek(date, { weekStartsOn: ISO_WEEK_START });
 }
 
 /**
- * Get the end of the week for a given date
+ * Get the end of the week for a given date (ISO standard: Sunday)
  */
-export function getWeekEnd(date: Date, weekStartsOn: WeekStart): Date {
-  return endOfWeek(date, { weekStartsOn });
+export function getWeekEnd(date: Date): Date {
+  return endOfWeek(date, { weekStartsOn: ISO_WEEK_START });
 }
 
 /**
- * Get all days in the week for a given date
+ * Get all days in the week for a given date (Mon-Sun)
  */
-export function getWeekDays(date: Date, weekStartsOn: WeekStart): Date[] {
-  const start = getWeekStart(date, weekStartsOn);
-  const end = getWeekEnd(date, weekStartsOn);
+export function getWeekDays(date: Date): Date[] {
+  const start = getWeekStart(date);
+  const end = getWeekEnd(date);
   return eachDayOfInterval({ start, end });
 }
 
@@ -160,22 +163,22 @@ export function parseISOSafe(dateString: string | null): Date | null {
 }
 
 /**
- * Get the current week's date range
+ * Get the current week's date range (ISO standard: Mon-Sun)
  */
-export function getCurrentWeekRange(weekStartsOn: WeekStart): { start: Date; end: Date } {
+export function getCurrentWeekRange(): { start: Date; end: Date } {
   const now = new Date();
   return {
-    start: getWeekStart(now, weekStartsOn),
-    end: getWeekEnd(now, weekStartsOn),
+    start: getWeekStart(now),
+    end: getWeekEnd(now),
   };
 }
 
 /**
- * Check if two dates are in the same week
+ * Check if two dates are in the same week (ISO standard)
  */
-export function isSameWeek(date1: Date, date2: Date, weekStartsOn: WeekStart): boolean {
-  const start1 = getWeekStart(date1, weekStartsOn);
-  const start2 = getWeekStart(date2, weekStartsOn);
+export function isSameWeek(date1: Date, date2: Date): boolean {
+  const start1 = getWeekStart(date1);
+  const start2 = getWeekStart(date2);
   return isSameDay(start1, start2);
 }
 

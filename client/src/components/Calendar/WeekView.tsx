@@ -38,7 +38,7 @@ import type {
 } from "../../services/api";
 
 export function WeekView() {
-  const { weekStartsOn, selectedDate, setSelectedDate } = useUIStore();
+  const { selectedDate, setSelectedDate } = useUIStore();
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventStartTime, setNewEventStartTime] = useState<
@@ -48,12 +48,12 @@ export function WeekView() {
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
 
   const weekDays = useMemo(
-    () => getWeekDays(selectedDate, weekStartsOn),
-    [selectedDate, weekStartsOn]
+    () => getWeekDays(selectedDate),
+    [selectedDate]
   );
 
-  const weekStart = getWeekStart(selectedDate, weekStartsOn);
-  const weekEnd = getWeekEnd(selectedDate, weekStartsOn);
+  const weekStart = getWeekStart(selectedDate);
+  const weekEnd = getWeekEnd(selectedDate);
 
   // Fetch events for the current week
   const { data, isLoading, error } = useEvents(weekStart, weekEnd);
@@ -417,22 +417,6 @@ export function WeekView() {
           <h2 className="text-xl font-bold text-amber-500">
             {formatWeekRange(weekStart, weekEnd)}
           </h2>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-amber-600">Week starts on:</label>
-          <select
-            value={weekStartsOn}
-            onChange={(e) =>
-              useUIStore
-                .getState()
-                .setWeekStartsOn(Number(e.target.value) as 0 | 1)
-            }
-            className="px-3 py-1 border-1 rounded-lg text-amber-200"
-          >
-            <option value={0}>Sunday</option>
-            <option value={1}>Monday</option>
-          </select>
         </div>
       </div>
 
