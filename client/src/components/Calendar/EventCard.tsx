@@ -6,15 +6,7 @@ import {
   getTimePosition,
   isPastEvent,
 } from "../../utils/dateHelpers";
-
-interface Event {
-  id: string;
-  title: string;
-  startTime: Date;
-  durationMinutes: number;
-  category?: string;
-  parentEventId?: string | null;
-}
+import type { Event } from "../../services/api";
 
 interface EventCardProps {
   event: Event;

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getEvents, updateEvent, createEvent, type Event, type UpdateEventData, type CreateEventData } from '../services/api';
+import { getEvents, updateEvent, createEvent, type Event, type EventsResponse, type UpdateEventData, type CreateEventData } from '../services/api';
 
 /**
  * Hook to fetch events for a given date range
@@ -29,17 +29,20 @@ export function useUpdateEvent() {
       const previousEvents = queryClient.getQueriesData({ queryKey: ['events'] });
 
       // Optimistically update to the new value
-      queryClient.setQueriesData<Event[]>({ queryKey: ['events'] }, (old) => {
+      queryClient.setQueriesData<EventsResponse>({ queryKey: ['events'] }, (old) => {
         if (!old) return old;
-        return old.map((event) =>
-          event.id === id
-            ? {
-                ...event,
-                ...data,
-                startTime: data.startTime ? new Date(data.startTime) : event.startTime,
-              }
-            : event
-        );
+        return {
+          ...old,
+          events: old.events.map((event) =>
+            event.id === id
+              ? {
+                  ...event,
+                  ...data,
+                  startTime: data.startTime ? new Date(data.startTime) : event.startTime,
+                }
+              : event
+          ),
+        };
       });
 
       // Return a context object with the snapshotted value

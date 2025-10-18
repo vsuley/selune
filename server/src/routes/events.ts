@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import { PrismaClient } from '../../prisma-client';
-import type { CreateEventRequest, EventResponse, UpdateEventRequest } from '../types';
+import type { CreateEventRequest, EventResponse, UpdateEventRequest, EventsResponse } from '../types';
+import { generateVirtualEventsForRange } from '../services/virtualEventService';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/events - Get events within a date range
+// Returns separate lists for scheduled events and unscheduled virtual events
 router.get('/', async (req, res) => {
   try {
-    const { start, end } = req.query;
+    const { start, end, includeVirtual } = req.query;
 
-    // Build query filters
+    // Build query filters for real events
     const where: any = {};
 
     if (start || end) {
@@ -23,6 +25,7 @@ router.get('/', async (req, res) => {
       }
     }
 
+    // Fetch real events from database
     const events = await prisma.event.findMany({
       where,
       orderBy: {
@@ -30,7 +33,7 @@ router.get('/', async (req, res) => {
       },
     });
 
-    const response: EventResponse[] = events.map((event) => ({
+    const eventResponses: EventResponse[] = events.map((event) => ({
       id: event.id,
       title: event.title,
       startTime: event.startTime,
@@ -46,6 +49,20 @@ router.get('/', async (req, res) => {
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
     }));
+
+    // Generate virtual events for unsatisfied patterns if date range provided
+    let virtualEvents: any[] = [];
+    if ((includeVirtual === 'true' || includeVirtual === undefined) && start && end) {
+      const startDate = new Date(start as string);
+      const endDate = new Date(end as string);
+
+      virtualEvents = await generateVirtualEventsForRange(startDate, endDate);
+    }
+
+    const response: EventsResponse = {
+      events: eventResponses,
+      virtualEvents,
+    };
 
     res.json(response);
   } catch (error) {
@@ -92,7 +109,7 @@ router.get('/backlog', async (req, res) => {
   }
 });
 
-// POST /api/events - Create a new event
+// POST /api/events - Create a new event (or schedule a virtual event)
 router.post('/', async (req, res) => {
   try {
     const {
@@ -100,6 +117,8 @@ router.post('/', async (req, res) => {
       startTime,
       durationMinutes,
       parentEventId,
+      patternId,
+      periodKey,
       category,
       isFlexible,
       isTimeBound,
@@ -127,6 +146,37 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // If patternId is provided, verify the pattern exists and is active
+    if (patternId) {
+      const pattern = await prisma.recurrencePattern.findUnique({
+        where: { id: patternId },
+      });
+
+      if (!pattern) {
+        return res.status(400).json({ error: 'Pattern not found' });
+      }
+
+      if (!pattern.active) {
+        return res.status(400).json({ error: 'Pattern is not active' });
+      }
+
+      // Check if this pattern+period combination already has a scheduled event
+      if (periodKey) {
+        const existingEvent = await prisma.event.findFirst({
+          where: {
+            patternId,
+            periodKey,
+          },
+        });
+
+        if (existingEvent) {
+          return res.status(409).json({
+            error: 'An event for this pattern and period already exists'
+          });
+        }
+      }
+    }
+
     // Create the event
     const event = await prisma.event.create({
       data: {
@@ -134,6 +184,8 @@ router.post('/', async (req, res) => {
         startTime: new Date(startTime),
         durationMinutes,
         parentEventId: parentEventId || null,
+        patternId: patternId || null,
+        periodKey: periodKey || null,
         category: category || 'general',
         isFlexible: isFlexible !== undefined ? isFlexible : true,
         isTimeBound: isTimeBound || false,

@@ -5,6 +5,8 @@ export interface CreateEventRequest {
   startTime: string; // ISO 8601 string (required)
   durationMinutes: number;
   parentEventId?: string | null;
+  patternId?: string | null; // If scheduling a virtual event from a pattern
+  periodKey?: string | null; // If scheduling a virtual event from a pattern
   category?: string;
   isFlexible?: boolean;
   isTimeBound?: boolean;
@@ -39,6 +41,23 @@ export interface EventResponse {
   notes: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface VirtualEventResponse {
+  id: string; // Temporary ID (format: virtual-{patternId}-{periodKey})
+  title: string;
+  durationMinutes: number;
+  patternId: string;
+  periodKey: string;
+  category: string;
+  isFlexible: boolean;
+  deadline: Date; // Period end date
+  notes: string;
+}
+
+export interface EventsResponse {
+  events: EventResponse[]; // Real scheduled events
+  virtualEvents: VirtualEventResponse[]; // Unscheduled pattern instances
 }
 
 // Recurrence pattern types

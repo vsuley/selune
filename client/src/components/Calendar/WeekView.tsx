@@ -53,7 +53,9 @@ export function WeekView() {
   const weekEnd = getWeekEnd(selectedDate, weekStartsOn);
 
   // Fetch events for the current week
-  const { data: events = [], isLoading, error } = useEvents(weekStart, weekEnd);
+  const { data, isLoading, error } = useEvents(weekStart, weekEnd);
+  const events = data?.events ?? [];
+  const virtualEvents = data?.virtualEvents ?? [];
   const updateEventMutation = useUpdateEvent();
   const createEventMutation = useCreateEvent();
 
