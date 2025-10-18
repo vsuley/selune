@@ -113,6 +113,7 @@ services:
       - server_node_modules:/app/server/node_modules
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-selune}:${POSTGRES_PASSWORD:-selune_password}@postgres:5432/${POSTGRES_DB:-selune_db}
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
