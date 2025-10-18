@@ -70,11 +70,16 @@ model Event {
   id    String @id @default(uuid())
   title String
 
-  // null = unscheduled (in backlog)
-  startTime DateTime?
+  // Required start time for all events
+  startTime DateTime
 
   // Duration in minutes
   durationMinutes Int
+
+  // Whether this event can be flexibly rescheduled
+  // true = flexible (e.g., haircuts, chores)
+  // false = fixed (e.g., appointments, game nights)
+  isFlexible Boolean @default(true)
 
   // Parent event reference (for sub-events)
   parentEventId String?

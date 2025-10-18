@@ -59,13 +59,11 @@ export async function generateInstanceForPeriod(
     }
   }
 
-  // Calculate startTime based on flexibleScheduling
-  let startTime: Date | null = null;
-
-  if (!pattern.flexibleScheduling) {
-    // Auto-schedule to calculated date/time
-    startTime = calculateStartTime(pattern, referenceDate);
-  }
+  // Calculate startTime
+  // For flexible scheduling, use period start date; for fixed, use calculated time
+  const startTime = pattern.flexibleScheduling
+    ? referenceDate
+    : calculateStartTime(pattern, referenceDate);
 
   // Calculate deadline (period end date)
   const deadline = getPeriodEndDate(periodKey, frequency);
@@ -78,6 +76,7 @@ export async function generateInstanceForPeriod(
       durationMinutes: pattern.durationMinutes,
       patternId: pattern.id,
       periodKey,
+      isFlexible: pattern.flexibleScheduling,
       isTimeBound: true,
       deadline,
       category: 'recurring',
@@ -295,7 +294,6 @@ export async function getNextEveryNDaysDate(patternId: string): Promise<Date | n
     where: {
       patternId,
       startTime: {
-        not: null,
         lte: new Date(),
       },
     },
@@ -304,7 +302,7 @@ export async function getNextEveryNDaysDate(patternId: string): Promise<Date | n
     },
   });
 
-  if (!lastEvent || !lastEvent.startTime) {
+  if (!lastEvent) {
     // No previous completion, suggest today
     return new Date();
   }

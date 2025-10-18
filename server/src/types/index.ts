@@ -2,10 +2,11 @@
 
 export interface CreateEventRequest {
   title: string;
-  startTime: string | null; // ISO 8601 string or null for backlog
+  startTime: string; // ISO 8601 string (required)
   durationMinutes: number;
   parentEventId?: string | null;
   category?: string;
+  isFlexible?: boolean;
   isTimeBound?: boolean;
   deadline?: string | null; // ISO 8601 string
   notes?: string;
@@ -13,10 +14,11 @@ export interface CreateEventRequest {
 
 export interface UpdateEventRequest {
   title?: string;
-  startTime?: string | null; // ISO 8601 string or null for backlog
+  startTime?: string; // ISO 8601 string (required)
   durationMinutes?: number;
   parentEventId?: string | null;
   category?: string;
+  isFlexible?: boolean;
   isTimeBound?: boolean;
   deadline?: string | null; // ISO 8601 string
   notes?: string;
@@ -25,12 +27,13 @@ export interface UpdateEventRequest {
 export interface EventResponse {
   id: string;
   title: string;
-  startTime: Date | null;
+  startTime: Date;
   durationMinutes: number;
   parentEventId: string | null;
   patternId: string | null;
   periodKey: string | null;
   category: string;
+  isFlexible: boolean;
   isTimeBound: boolean;
   deadline: Date | null;
   notes: string;

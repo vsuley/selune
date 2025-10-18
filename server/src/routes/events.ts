@@ -39,6 +39,7 @@ router.get('/', async (req, res) => {
       patternId: event.patternId,
       periodKey: event.periodKey,
       category: event.category,
+      isFlexible: event.isFlexible,
       isTimeBound: event.isTimeBound,
       deadline: event.deadline,
       notes: event.notes,
@@ -53,12 +54,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/events/backlog - Get unscheduled events (backlog items)
+// GET /api/events/backlog - Get flexible events (events that can be rescheduled)
 router.get('/backlog', async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: {
-        startTime: null,
+        isFlexible: true,
       },
       orderBy: [
         { isTimeBound: 'desc' }, // Time-bound items first
@@ -76,6 +77,7 @@ router.get('/backlog', async (req, res) => {
       patternId: event.patternId,
       periodKey: event.periodKey,
       category: event.category,
+      isFlexible: event.isFlexible,
       isTimeBound: event.isTimeBound,
       deadline: event.deadline,
       notes: event.notes,
@@ -99,6 +101,7 @@ router.post('/', async (req, res) => {
       durationMinutes,
       parentEventId,
       category,
+      isFlexible,
       isTimeBound,
       deadline,
       notes,
@@ -107,6 +110,10 @@ router.post('/', async (req, res) => {
     // Basic validation
     if (!title || title.trim().length === 0) {
       return res.status(400).json({ error: 'Title is required' });
+    }
+
+    if (!startTime) {
+      return res.status(400).json({ error: 'Start time is required' });
     }
 
     if (!durationMinutes || durationMinutes <= 0) {
@@ -124,10 +131,11 @@ router.post('/', async (req, res) => {
     const event = await prisma.event.create({
       data: {
         title: title.trim(),
-        startTime: startTime ? new Date(startTime) : null,
+        startTime: new Date(startTime),
         durationMinutes,
         parentEventId: parentEventId || null,
         category: category || 'general',
+        isFlexible: isFlexible !== undefined ? isFlexible : true,
         isTimeBound: isTimeBound || false,
         deadline: deadline ? new Date(deadline) : null,
         notes: notes || '',
@@ -143,6 +151,7 @@ router.post('/', async (req, res) => {
       patternId: event.patternId,
       periodKey: event.periodKey,
       category: event.category,
+      isFlexible: event.isFlexible,
       isTimeBound: event.isTimeBound,
       deadline: event.deadline,
       notes: event.notes,
@@ -183,7 +192,10 @@ router.patch('/:id', async (req, res) => {
     }
 
     if (updates.startTime !== undefined) {
-      updateData.startTime = updates.startTime ? new Date(updates.startTime) : null;
+      if (!updates.startTime) {
+        return res.status(400).json({ error: 'Start time cannot be null' });
+      }
+      updateData.startTime = new Date(updates.startTime);
     }
 
     if (updates.durationMinutes !== undefined) {
@@ -195,6 +207,10 @@ router.patch('/:id', async (req, res) => {
 
     if (updates.category !== undefined) {
       updateData.category = updates.category;
+    }
+
+    if (updates.isFlexible !== undefined) {
+      updateData.isFlexible = updates.isFlexible;
     }
 
     if (updates.isTimeBound !== undefined) {
@@ -228,6 +244,7 @@ router.patch('/:id', async (req, res) => {
       patternId: updatedEvent.patternId,
       periodKey: updatedEvent.periodKey,
       category: updatedEvent.category,
+      isFlexible: updatedEvent.isFlexible,
       isTimeBound: updatedEvent.isTimeBound,
       deadline: updatedEvent.deadline,
       notes: updatedEvent.notes,
