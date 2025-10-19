@@ -66,10 +66,11 @@ export async function getEvents(
   const startISO = `${start.getFullYear()}-${String(
     start.getMonth() + 1
   ).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}T00:00:00`;
+  // End date should include the entire day, so use 23:59:59
   const endISO = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(
     2,
     "0"
-  )}-${String(end.getDate()).padStart(2, "0")}T00:00:00`;
+  )}-${String(end.getDate()).padStart(2, "0")}T23:59:59`;
 
   const response = await fetch(
     `${API_BASE_URL}/api/events?start=${encodeURIComponent(
@@ -216,6 +217,7 @@ export interface CreatePatternData {
   yearlyConfig?: YearlyConfig;
   yearlyNthWeekday?: YearlyNthWeekdayConfig;
   flexibleScheduling?: boolean;
+  startTime?: string; // ISO 8601 string - required when flexibleScheduling is false
 }
 
 export interface RecurrencePattern {
@@ -228,6 +230,7 @@ export interface RecurrencePattern {
   yearlyConfig: YearlyConfig | null;
   yearlyNthWeekday: YearlyNthWeekdayConfig | null;
   flexibleScheduling: boolean;
+  startTime: Date | null; // null when flexibleScheduling is true
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -255,9 +258,11 @@ export async function getPatterns(): Promise<RecurrencePattern[]> {
       pattern: RecurrencePattern & {
         createdAt: string;
         updatedAt: string;
+        startTime?: string;
       }
     ) => ({
       ...pattern,
+      startTime: pattern.startTime ? new Date(pattern.startTime) : null,
       createdAt: new Date(pattern.createdAt),
       updatedAt: new Date(pattern.updatedAt),
     })
@@ -285,6 +290,7 @@ export async function createPattern(
   // Convert date strings to Date objects
   return {
     ...pattern,
+    startTime: pattern.startTime ? new Date(pattern.startTime) : null,
     createdAt: new Date(pattern.createdAt),
     updatedAt: new Date(pattern.updatedAt),
   };

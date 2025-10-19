@@ -31,6 +31,7 @@ interface RecurrencePattern {
   yearlyConfig: any;
   yearlyNthWeekday: any;
   flexibleScheduling: boolean;
+  startTime: Date | null;
   active: boolean;
 }
 
@@ -60,7 +61,7 @@ export async function generateInstanceForPeriod(
   }
 
   // Calculate startTime
-  // For flexible scheduling, use period start date; for fixed, use calculated time
+  // For flexible scheduling, use period start date; for fixed, use pattern's startTime
   const startTime = pattern.flexibleScheduling
     ? referenceDate
     : calculateStartTime(pattern, referenceDate);
@@ -88,23 +89,31 @@ export async function generateInstanceForPeriod(
 
 /**
  * Calculate the scheduled start time for non-flexible patterns
+ * Uses pattern.startTime to get the time of day, and referenceDate for the date
  */
 function calculateStartTime(pattern: RecurrencePattern, referenceDate: Date): Date {
+  if (!pattern.startTime) {
+    throw new Error('startTime is required for non-flexible patterns');
+  }
+
   const frequency = pattern.frequency as FrequencyType;
-  const defaultHour = 19; // 7 PM default for auto-scheduled events
+  const patternTime = new Date(pattern.startTime);
+  const hour = patternTime.getHours();
+  const minute = patternTime.getMinutes();
+  const second = patternTime.getSeconds();
 
   switch (frequency) {
     case 'weekly': {
-      // Schedule for the reference date at default hour
+      // Schedule for the reference date at pattern's time
       const scheduled = new Date(referenceDate);
-      scheduled.setHours(defaultHour, 0, 0, 0);
+      scheduled.setHours(hour, minute, second, 0);
       return scheduled;
     }
 
     case 'monthly': {
-      // Schedule for same day of month
+      // Schedule for same day of month at pattern's time
       const scheduled = new Date(referenceDate);
-      scheduled.setHours(defaultHour, 0, 0, 0);
+      scheduled.setHours(hour, minute, second, 0);
       return scheduled;
     }
 
@@ -128,7 +137,7 @@ function calculateStartTime(pattern: RecurrencePattern, referenceDate: Date): Da
         day = daysInMonth;
       }
 
-      const scheduled = new Date(year, config.month - 1, day, defaultHour, 0, 0, 0);
+      const scheduled = new Date(year, config.month - 1, day, hour, minute, second, 0);
       return scheduled;
     }
 
@@ -144,21 +153,21 @@ function calculateStartTime(pattern: RecurrencePattern, referenceDate: Date): Da
         config.weekday,
         config.occurrence
       );
-      scheduled.setHours(defaultHour, 0, 0, 0);
+      scheduled.setHours(hour, minute, second, 0);
       return scheduled;
     }
 
     case 'n_per_period': {
-      // For n_per_period, schedule at reference date
+      // For n_per_period, schedule at reference date at pattern's time
       const scheduled = new Date(referenceDate);
-      scheduled.setHours(defaultHour, 0, 0, 0);
+      scheduled.setHours(hour, minute, second, 0);
       return scheduled;
     }
 
     case 'every_n_days': {
-      // For every_n_days, schedule at reference date
+      // For every_n_days, schedule at reference date at pattern's time
       const scheduled = new Date(referenceDate);
-      scheduled.setHours(defaultHour, 0, 0, 0);
+      scheduled.setHours(hour, minute, second, 0);
       return scheduled;
     }
 

@@ -1,14 +1,19 @@
-import { Router } from 'express';
-import { PrismaClient } from '../../prisma-client';
-import type { CreateEventRequest, EventResponse, UpdateEventRequest, EventsResponse } from '../types';
-import { generateVirtualEventsForRange } from '../services/virtualEventService';
+import { Router } from "express";
+import { PrismaClient } from "../../prisma-client";
+import type {
+  CreateEventRequest,
+  EventResponse,
+  UpdateEventRequest,
+  EventsResponse,
+} from "../types";
+import { generateVirtualEventsForRange } from "../services/virtualEventService";
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/events - Get events within a date range
 // Returns separate lists for scheduled events and unscheduled virtual events
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { start, end, includeVirtual } = req.query;
 
@@ -29,11 +34,11 @@ router.get('/', async (req, res) => {
     const events = await prisma.event.findMany({
       where,
       orderBy: {
-        startTime: 'asc',
+        startTime: "asc",
       },
     });
 
-    const eventResponses: EventResponse[] = events.map((event) => ({
+    const eventResponses: EventResponse[] = events.map((event: any) => ({
       id: event.id,
       title: event.title,
       startTime: event.startTime,
@@ -52,7 +57,11 @@ router.get('/', async (req, res) => {
 
     // Generate virtual events for unsatisfied patterns if date range provided
     let virtualEvents: any[] = [];
-    if ((includeVirtual === 'true' || includeVirtual === undefined) && start && end) {
+    if (
+      (includeVirtual === "true" || includeVirtual === undefined) &&
+      start &&
+      end
+    ) {
       const startDate = new Date(start as string);
       const endDate = new Date(end as string);
 
@@ -66,26 +75,26 @@ router.get('/', async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching events:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // GET /api/events/backlog - Get flexible events (events that can be rescheduled)
-router.get('/backlog', async (req, res) => {
+router.get("/backlog", async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: {
         isFlexible: true,
       },
       orderBy: [
-        { isTimeBound: 'desc' }, // Time-bound items first
-        { deadline: 'asc' },     // Then by deadline
-        { createdAt: 'desc' },   // Then most recent
+        { isTimeBound: "desc" }, // Time-bound items first
+        { deadline: "asc" }, // Then by deadline
+        { createdAt: "desc" }, // Then most recent
       ],
     });
 
-    const response: EventResponse[] = events.map((event) => ({
+    const response: EventResponse[] = events.map((event: any) => ({
       id: event.id,
       title: event.title,
       startTime: event.startTime,
@@ -104,13 +113,13 @@ router.get('/backlog', async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error fetching backlog events:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching backlog events:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // POST /api/events - Create a new event (or schedule a virtual event)
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const {
       title,
@@ -128,21 +137,21 @@ router.post('/', async (req, res) => {
 
     // Basic validation
     if (!title || title.trim().length === 0) {
-      return res.status(400).json({ error: 'Title is required' });
+      return res.status(400).json({ error: "Title is required" });
     }
 
     if (!startTime) {
-      return res.status(400).json({ error: 'Start time is required' });
+      return res.status(400).json({ error: "Start time is required" });
     }
 
     if (!durationMinutes || durationMinutes <= 0) {
-      return res.status(400).json({ error: 'Duration must be greater than 0' });
+      return res.status(400).json({ error: "Duration must be greater than 0" });
     }
 
     // If time-bound, deadline is required
     if (isTimeBound && !deadline) {
       return res.status(400).json({
-        error: 'Deadline is required for time-bound events'
+        error: "Deadline is required for time-bound events",
       });
     }
 
@@ -153,11 +162,11 @@ router.post('/', async (req, res) => {
       });
 
       if (!pattern) {
-        return res.status(400).json({ error: 'Pattern not found' });
+        return res.status(400).json({ error: "Pattern not found" });
       }
 
       if (!pattern.active) {
-        return res.status(400).json({ error: 'Pattern is not active' });
+        return res.status(400).json({ error: "Pattern is not active" });
       }
 
       // Check if this pattern+period combination already has a scheduled event
@@ -171,7 +180,7 @@ router.post('/', async (req, res) => {
 
         if (existingEvent) {
           return res.status(409).json({
-            error: 'An event for this pattern and period already exists'
+            error: "An event for this pattern and period already exists",
           });
         }
       }
@@ -186,11 +195,11 @@ router.post('/', async (req, res) => {
         parentEventId: parentEventId || null,
         patternId: patternId || null,
         periodKey: periodKey || null,
-        category: category || 'general',
+        category: category || "general",
         isFlexible: isFlexible !== undefined ? isFlexible : true,
         isTimeBound: isTimeBound || false,
         deadline: deadline ? new Date(deadline) : null,
-        notes: notes || '',
+        notes: notes || "",
       },
     });
 
@@ -213,13 +222,13 @@ router.post('/', async (req, res) => {
 
     res.status(201).json(response);
   } catch (error) {
-    console.error('Error creating event:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error creating event:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // PATCH /api/events/:id - Update an event
-router.patch('/:id', async (req, res) => {
+router.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body as UpdateEventRequest;
@@ -230,7 +239,7 @@ router.patch('/:id', async (req, res) => {
     });
 
     if (!existingEvent) {
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({ error: "Event not found" });
     }
 
     // Build update data object
@@ -238,21 +247,23 @@ router.patch('/:id', async (req, res) => {
 
     if (updates.title !== undefined) {
       if (updates.title.trim().length === 0) {
-        return res.status(400).json({ error: 'Title cannot be empty' });
+        return res.status(400).json({ error: "Title cannot be empty" });
       }
       updateData.title = updates.title.trim();
     }
 
     if (updates.startTime !== undefined) {
       if (!updates.startTime) {
-        return res.status(400).json({ error: 'Start time cannot be null' });
+        return res.status(400).json({ error: "Start time cannot be null" });
       }
       updateData.startTime = new Date(updates.startTime);
     }
 
     if (updates.durationMinutes !== undefined) {
       if (updates.durationMinutes <= 0) {
-        return res.status(400).json({ error: 'Duration must be greater than 0' });
+        return res
+          .status(400)
+          .json({ error: "Duration must be greater than 0" });
       }
       updateData.durationMinutes = updates.durationMinutes;
     }
@@ -270,7 +281,9 @@ router.patch('/:id', async (req, res) => {
     }
 
     if (updates.deadline !== undefined) {
-      updateData.deadline = updates.deadline ? new Date(updates.deadline) : null;
+      updateData.deadline = updates.deadline
+        ? new Date(updates.deadline)
+        : null;
     }
 
     if (updates.notes !== undefined) {
@@ -306,13 +319,13 @@ router.patch('/:id', async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error updating event:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // DELETE /api/events/:id - Delete an event
-router.delete('/:id', async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -322,7 +335,7 @@ router.delete('/:id', async (req, res) => {
     });
 
     if (!existingEvent) {
-      return res.status(404).json({ error: 'Event not found' });
+      return res.status(404).json({ error: "Event not found" });
     }
 
     // Delete the event (cascade will handle child events)
@@ -332,8 +345,8 @@ router.delete('/:id', async (req, res) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error('Error deleting event:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error deleting event:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

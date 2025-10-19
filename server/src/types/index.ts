@@ -94,6 +94,7 @@ export interface CreatePatternRequest {
   yearlyConfig?: YearlyConfig;
   yearlyNthWeekday?: YearlyNthWeekdayConfig;
   flexibleScheduling?: boolean;
+  startTime?: string; // ISO 8601 string - required when flexibleScheduling is false
 }
 
 export interface UpdatePatternRequest {
@@ -112,6 +113,7 @@ export interface PatternResponse {
   yearlyConfig: YearlyConfig | null;
   yearlyNthWeekday: YearlyNthWeekdayConfig | null;
   flexibleScheduling: boolean;
+  startTime: Date | null; // null when flexibleScheduling is true
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

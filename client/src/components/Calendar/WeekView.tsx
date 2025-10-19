@@ -321,14 +321,24 @@ export function WeekView() {
     const grouped: Record<string, Event[]> = {};
 
     weekDays.forEach((day) => {
-      const dayKey = day.toISOString().split("T")[0];
+      // Use local date string (YYYY-MM-DD) for grouping
+      const year = day.getFullYear();
+      const month = String(day.getMonth() + 1).padStart(2, '0');
+      const date = String(day.getDate()).padStart(2, '0');
+      const dayKey = `${year}-${month}-${date}`;
       grouped[dayKey] = [];
     });
 
     events.forEach((event) => {
       // Only include events that have a startTime (scheduled events)
       if (event.startTime) {
-        const eventDayKey = event.startTime.toISOString().split("T")[0];
+        // Get the local date for the event's startTime
+        const eventDate = new Date(event.startTime);
+        const year = eventDate.getFullYear();
+        const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+        const date = String(eventDate.getDate()).padStart(2, '0');
+        const eventDayKey = `${year}-${month}-${date}`;
+
         if (grouped[eventDayKey]) {
           grouped[eventDayKey].push(event);
         }
@@ -444,7 +454,11 @@ export function WeekView() {
 
                 {/* Day columns with events */}
                 {weekDays.map((day) => {
-                  const dayKey = day.toISOString().split("T")[0];
+                  // Use local date string (YYYY-MM-DD) for looking up events
+                  const year = day.getFullYear();
+                  const month = String(day.getMonth() + 1).padStart(2, '0');
+                  const date = String(day.getDate()).padStart(2, '0');
+                  const dayKey = `${year}-${month}-${date}`;
                   const dayEvents = eventsByDay[dayKey] || [];
 
                   return (

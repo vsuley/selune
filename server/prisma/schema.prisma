@@ -52,6 +52,11 @@ model RecurrencePattern {
   // false = auto-schedule to calculated date/time (game nights, community events)
   flexibleScheduling Boolean @default(true)
 
+  // Default start time for inflexible patterns (time of day to schedule)
+  // Must be null when flexibleScheduling is true
+  // Cannot be null when flexibleScheduling is false
+  startTime DateTime?
+
   // Whether this pattern is active (can be deactivated instead of deleted)
   active Boolean @default(true)
 
