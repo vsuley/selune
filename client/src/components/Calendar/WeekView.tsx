@@ -18,7 +18,6 @@ import {
   getWeekEnd,
   snapToQuarterHour,
   getColumnIndex,
-  DAY_HEADER_HEIGHT,
 } from "../../utils/dateHelpers";
 import { TimeGrid } from "./TimeGrid";
 import { DayColumn } from "./DayColumn";
@@ -47,10 +46,7 @@ export function WeekView() {
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null);
 
-  const weekDays = useMemo(
-    () => getWeekDays(selectedDate),
-    [selectedDate]
-  );
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
 
   const weekStart = getWeekStart(selectedDate);
   const weekEnd = getWeekEnd(selectedDate);
@@ -224,7 +220,9 @@ export function WeekView() {
 
       let newStartTime = new Date(targetDay);
       newStartTime.setHours(0, 0, 0, 0);
-      newStartTime = new Date(newStartTime.getTime() + minutesFromMidnight * 60 * 1000);
+      newStartTime = new Date(
+        newStartTime.getTime() + minutesFromMidnight * 60 * 1000
+      );
 
       // Snap to 15-minute increments
       newStartTime = snapToQuarterHour(newStartTime);
