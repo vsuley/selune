@@ -10,7 +10,7 @@ import {
   addMinutes,
   differenceInMinutes,
   parseISO,
-} from 'date-fns';
+} from "date-fns";
 
 /**
  * ISO 8601 standard: weeks start on Monday
@@ -64,14 +64,14 @@ export function getPreviousWeek(date: Date): Date {
  * Format a date for display in the calendar header
  */
 export function formatDayHeader(date: Date): string {
-  return format(date, 'EEE d');
+  return format(date, "EEE d");
 }
 
 /**
  * Format a date range for the week header
  */
 export function formatWeekRange(start: Date, end: Date): string {
-  return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+  return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
 }
 
 /**
@@ -92,8 +92,8 @@ export function getHoursInDay(): number[] {
  * Format hour for time labels (e.g., "9 AM", "2 PM")
  */
 export function formatHourLabel(hour: number): string {
-  if (hour === 0) return '12 AM';
-  if (hour === 12) return '12 PM';
+  if (hour === 0) return "12 AM";
+  if (hour === 12) return "12 PM";
   if (hour < 12) return `${hour} AM`;
   return `${hour - 12} PM`;
 }
@@ -111,10 +111,7 @@ export function getTimePosition(date: Date): number {
 /**
  * Get the date/time from a pixel position in the grid
  */
-export function getDateFromPosition(
-  day: Date,
-  pixelY: number
-): Date {
+export function getDateFromPosition(day: Date, pixelY: number): Date {
   const totalMinutes = pixelY; // 1px = 1 minute
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -193,7 +190,8 @@ export function getDayOfWeek(date: Date): number {
  * Get the column index for a date in the week view
  */
 export function getColumnIndex(date: Date, weekStart: Date): number {
-  const daysDiff = differenceInMinutes(startOfDay(date), startOfDay(weekStart)) / (24 * 60);
+  const daysDiff =
+    differenceInMinutes(startOfDay(date), startOfDay(weekStart)) / (24 * 60);
   return Math.floor(daysDiff);
 }
 
